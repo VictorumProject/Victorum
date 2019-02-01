@@ -1,0 +1,5 @@
+mysql:
+  server: localhost
+  database: Victorum
+  user: user
+  password: password
