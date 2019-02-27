@@ -32,8 +32,7 @@ public class SQLManager {
 			} catch (SQLException e) {
 				e.printStackTrace();
 				for (Player p : Bukkit.getOnlinePlayers()) {
-					p.kickPlayer(
-							"§e§lVictorum\n§b      Palvelin uudelleenkäynnistyy teknisistä syistä.");
+					p.kickPlayer("Â§eÂ§lVictorum\nÂ§b      Palvelin uudelleenkÃ¤ynnistyy teknisistÃ¤ syistÃ¤.");
 				}
 				Bukkit.shutdown();
 			}

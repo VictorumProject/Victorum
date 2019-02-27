@@ -7,7 +7,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 public class ClaimInvClickCanceller implements Listener {
 	@EventHandler
 	public void onChestClick(InventoryClickEvent e) {
-		if (e.getInventory().getName().equals("§e/claim map")) {
+		if (e.getInventory().getName().equals("Â§e/claim map")) {
 			e.setCancelled(true);
 		}
 	}

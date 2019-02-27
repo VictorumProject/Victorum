@@ -14,7 +14,7 @@ public class ConnectionListener implements Listener {
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
 		Player p = e.getPlayer();
-		e.setJoinMessage("§e" + p.getName() + " §atuli servulle");
+		e.setJoinMessage("Â§e" + p.getName() + " Â§atuli servulle");
 
 		// Make sure there is data
 		try (PreparedStatement stmt = SQLManager.prepare(

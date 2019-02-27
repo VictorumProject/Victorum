@@ -30,8 +30,8 @@ public class ChatListener implements Listener {
 		}
 
 		if (id == 0)
-			e.setFormat("ง8[งaงl" + factName + "ง8] งe" + p.getDisplayName() + " ง8> งb%2$s");
+			e.setFormat("ยง8[ยงaยงl" + factName + "ยง8] ยงe" + p.getDisplayName() + " ยง8> ยงb%2$s");
 		else
-			e.setFormat("ง8[งeงl" + factName + "ง8] งe" + p.getDisplayName() + " ง8> งb%2$s");
+			e.setFormat("ยง8[ยงeยงl" + factName + "ยง8] ยงe" + p.getDisplayName() + " ยง8> ยงb%2$s");
 	}
 }

@@ -32,7 +32,7 @@ public class ChestOpenListener implements Listener {
 		Claim c = Claim.get(b.getLocation());
 		if (c.getFactionID() == 0 || c.getFactionID() != Faction.get(p.getUniqueId()).getID()) {
 			e.setCancelled(true);
-			p.sendMessage("§eVoit avata chestit vain omalla alueellasi.");
+			p.sendMessage("Â§eVoit avata chestit vain omalla alueellasi.");
 		}
 	}
 
