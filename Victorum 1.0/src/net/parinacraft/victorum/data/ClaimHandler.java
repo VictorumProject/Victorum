@@ -18,27 +18,25 @@ public class ClaimHandler {
 
 	public Claim getClaim(int chunkX, int chunkZ) {
 		// Return default faction with coords if not claimed
-		int key = toID(chunkX, chunkZ);
-		if (!claims.containsKey(key))
-			return new Claim(chunkX, chunkZ, 0);
-		return claims.get(key);
+		int id = chunkX << 16 | (chunkZ & 0xFFFF);
+		if (!claims.containsKey(id))
+			return new Claim(pl, chunkX, chunkZ, 0);
+		return claims.get(id);
 	}
 
-	public void create(int chunkX, int chunkZ, Claim claim) {
-		claims.put(toID(chunkX, chunkZ), claim);
+	public void create(int chunkX, int chunkZ, int facID) {
+		Claim c = new Claim(pl, chunkX, chunkZ, facID);
+		claims.put(c.getID(), c);
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-			pl.getSqlManager().createClaim(claim);
+			pl.getSqlManager().createClaim(c);
 		});
 	}
 
-	public void unclaim(int chunkX, int chunkZ) {
-		claims.remove(toID(chunkX, chunkZ));
+	public void unclaim(Claim claim) {
+		claims.remove(claim.getID());
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-			pl.getSqlManager().removeClaim(chunkX, chunkZ);
+			pl.getSqlManager().removeClaim(claim.getChunkX(), claim.getChunkZ());
 		});
 	}
 
-	public static int toID(int chunkX, int chunkZ) {
-		return chunkX << 16 | (chunkZ & 0xFFFF);
-	}
 }

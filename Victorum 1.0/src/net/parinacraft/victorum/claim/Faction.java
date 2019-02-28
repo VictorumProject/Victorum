@@ -11,12 +11,16 @@ import net.parinacraft.victorum.data.PlayerData;
 
 public class Faction {
 	private final int factionID;
+	private int boardPosition;
+	private long value;
 	private String shortName, longName;
 
-	public Faction(int factionID, String shortName, String longName) {
+	public Faction(int factionID, String shortName, String longName, long value, int boardPosition) {
 		this.shortName = Preconditions.checkNotNull(shortName);
 		this.longName = Preconditions.checkNotNull(longName);
 		this.factionID = factionID;
+		this.value = value;
+		this.boardPosition = boardPosition;
 	}
 
 	public int getID() {
@@ -39,5 +43,13 @@ public class Faction {
 				players.add(pd.getUUID());
 		}
 		return players;
+	}
+
+	public long getValue() {
+		return value;
+	}
+
+	public int getBoardPosition() {
+		return boardPosition;
 	}
 }

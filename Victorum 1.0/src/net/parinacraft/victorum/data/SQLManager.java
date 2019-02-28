@@ -69,11 +69,12 @@ public class SQLManager {
 			Statement stmt = conn.createStatement();
 			stmt.addBatch("CREATE TABLE IF NOT EXISTS PlayerData (UUID varchar(36), FactionID int, UNIQUE (UUID))");
 			stmt.addBatch("CREATE TABLE IF NOT EXISTS Claim (ChunkX int(5), ChunkZ int(5), FactionID int)");
-			stmt.addBatch(
-					"CREATE TABLE IF NOT EXISTS Faction (FactionID int, Short varchar(" + Opt.MAX_FACTION_NAME_SHORT
-							+ "), Name varchar(" + Opt.MAX_FACTION_NAME_LONG + "), UNIQUE (FactionID, Short))");
+			stmt.addBatch("CREATE TABLE IF NOT EXISTS Faction (FactionID int, Short varchar("
+					+ Opt.MAX_FACTION_NAME_SHORT + "), Name varchar(" + Opt.MAX_FACTION_NAME_LONG
+					+ "), Value int(30), BoardPosition int, UNIQUE (FactionID, Short))");
 			// Create default faction
-			stmt.addBatch("INSERT IGNORE INTO Faction (FactionID, Short, Name) VALUES (0, 'VICT', 'Victorum')");
+			stmt.addBatch(
+					"INSERT IGNORE INTO Faction (FactionID, Short, Name, Value, BoardPosition) VALUES (0, 'VICT', 'Victorum', 0, 0)");
 			stmt.executeBatch();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -89,7 +90,9 @@ public class SQLManager {
 					int id = rs.getInt("FactionID");
 					String shortName = rs.getString("Short");
 					String longName = rs.getString("Name");
-					val.put(rs.getInt("FactionID"), new Faction(id, shortName, longName));
+					long value = rs.getLong("Value");
+					int boardPosition = rs.getInt("BoardPosition");
+					val.put(rs.getInt("FactionID"), new Faction(id, shortName, longName, value, boardPosition));
 				}
 			}
 		} catch (Exception e) {
@@ -124,8 +127,8 @@ public class SQLManager {
 					int facID = rs.getInt("FactionID");
 					int chunkX = rs.getInt("ChunkX");
 					int chunkZ = rs.getInt("ChunkZ");
-					int key = ClaimHandler.toID(chunkX, chunkZ);
-					val.put(key, new Claim(chunkX, chunkZ, facID));
+					int claimID = chunkX << 16 | (chunkZ & 0xFFFF);
+					val.put(claimID, new Claim(pl, chunkX, chunkZ, facID));
 				}
 			}
 		} catch (Exception e) {
@@ -148,7 +151,7 @@ public class SQLManager {
 	public void createFaction(Faction fac) {
 		checkConnection();
 		try (PreparedStatement stmt = conn
-				.prepareStatement("INSERT INTO Faction (FactionID, Short, Name) VALUES (?, ?, ?)")) {
+				.prepareStatement("INSERT INTO Faction (FactionID, Short, Name, Value, BoardPosition) VALUES (?, ?, ?, 0, 0)")) {
 			stmt.setInt(1, fac.getID());
 			stmt.setString(2, fac.getShortName());
 			stmt.setString(3, fac.getLongName());
