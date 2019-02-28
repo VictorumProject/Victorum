@@ -3,4 +3,4 @@ name: Victorum
 version: 1.0.0
 author: Juubes
 commands:
-  claim: null
+  claim: 

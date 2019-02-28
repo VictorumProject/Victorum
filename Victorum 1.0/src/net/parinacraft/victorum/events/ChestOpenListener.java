@@ -10,10 +10,16 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+import net.parinacraft.victorum.Victorum;
 import net.parinacraft.victorum.claim.Claim;
-import net.parinacraft.victorum.claim.Faction;
 
 public class ChestOpenListener implements Listener {
+	private final Victorum pl;
+
+	public ChestOpenListener(Victorum pl) {
+		this.pl = pl;
+	}
+
 	@EventHandler
 	public void onChestOpen(PlayerInteractEvent e) {
 		Block b = e.getClickedBlock();
@@ -29,13 +35,17 @@ public class ChestOpenListener implements Listener {
 		Player p = e.getPlayer();
 
 		// If not own area
-		Claim c = Claim.get(b.getLocation());
-		if (c.getFactionID() == 0 || c.getFactionID() != Faction.get(p.getUniqueId()).getID()) {
+		Claim c = pl.getClaimHandler().getClaim(b.getChunk().getX(), b.getChunk().getZ());
+		if (c.getFactionID() == 0
+				|| c.getFactionID() != pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID()) {
 			e.setCancelled(true);
 			p.sendMessage("§eVoit avata chestit vain omalla alueellasi.");
 		}
 	}
 
+	/**
+	 * Disable enderchests.
+	 */
 	@EventHandler
 	public void onEnderChestOpen(InventoryOpenEvent e) {
 		if (e.getInventory().getType().equals(InventoryType.ENDER_CHEST))
