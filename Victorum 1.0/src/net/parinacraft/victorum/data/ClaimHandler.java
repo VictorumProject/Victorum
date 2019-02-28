@@ -1,7 +1,9 @@
 package net.parinacraft.victorum.data;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 
@@ -20,7 +22,7 @@ public class ClaimHandler {
 	public Claim getClaim(int chunkX, int chunkZ) {
 		// Return default faction with coords if not claimed
 		int id = chunkX << 16 | (chunkZ & 0xFFFF);
-		return claims.putIfAbsent(id, new Claim(pl, chunkX, chunkZ, 0));
+		return claims.getOrDefault(id, new Claim(pl, chunkX, chunkZ, 0));
 	}
 
 	public void create(int chunkX, int chunkZ, int facID) {
@@ -39,9 +41,13 @@ public class ClaimHandler {
 	}
 
 	public void unclaimAll(int facID) {
+		Set<Integer> claimIDs = new HashSet<>();
 		for (Entry<Integer, Claim> e : claims.entrySet()) {
 			if (e.getValue().getFactionID() == facID)
-				claims.remove(e.getKey());
+				claimIDs.add(e.getKey());
+		}
+		for (Integer id : claimIDs) {
+			claims.remove(id);
 		}
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
 			pl.getSqlManager().unclaimAll(facID);

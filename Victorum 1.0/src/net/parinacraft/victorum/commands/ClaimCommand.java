@@ -13,6 +13,7 @@ import net.parinacraft.victorum.Opt;
 import net.parinacraft.victorum.Victorum;
 import net.parinacraft.victorum.claim.Claim;
 import net.parinacraft.victorum.claim.Faction;
+import net.parinacraft.victorum.data.PlayerData;
 
 public class ClaimCommand implements CommandExecutor {
 	private final Victorum pl;
@@ -41,7 +42,9 @@ public class ClaimCommand implements CommandExecutor {
 			} else if (args[0].equalsIgnoreCase("map")) {
 				openMap(p, p.getLocation().getChunk().getX(), p.getLocation().getChunk().getZ());
 			} else if (args[0].equalsIgnoreCase("create")) {
-				sender.sendMessage("§c" + lbl + " <nimi>");
+				sender.sendMessage("§c" + lbl + " create <nimi>");
+			} else if (args[0].equalsIgnoreCase("leave")) {
+				leaveFaction(p, playerFac);
 			} else {
 				sender.sendMessage("§eKomentoa ei prosessoitu.");
 			}
@@ -58,8 +61,8 @@ public class ClaimCommand implements CommandExecutor {
 						return true;
 					}
 
-					for (int i = -rad+1; i < rad; i++) {
-						for (int j = -rad+1; j < rad; j++) {
+					for (int i = -rad + 1; i < rad; i++) {
+						for (int j = -rad + 1; j < rad; j++) {
 							claim(p, playerFac, chunkX + i, chunkZ + j);
 						}
 					}
@@ -97,6 +100,18 @@ public class ClaimCommand implements CommandExecutor {
 			}
 		}
 		return true;
+	}
+
+	private void leaveFaction(Player p, Faction playerFac) {
+		PlayerData data = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
+		int oldFactionID = data.getFactionID();
+		p.sendMessage("§eLähdit factionista " + data.getFaction().getLongName() + ".");
+		data.setFactionID(0);
+
+		if (pl.getFactionHandler().getFaction(oldFactionID).getPlayers().size() == 0) {
+			pl.getFactionHandler().delete(oldFactionID);
+			p.sendMessage("§eOlit viimeinen factionissasi, joten se lopetettiin.");
+		}
 	}
 
 	private void claim(Player claimer, Faction fac, int chunkX, int chunkZ) {
