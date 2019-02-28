@@ -150,8 +150,8 @@ public class SQLManager {
 
 	public void createFaction(Faction fac) {
 		checkConnection();
-		try (PreparedStatement stmt = conn
-				.prepareStatement("INSERT INTO Faction (FactionID, Short, Name, Value, BoardPosition) VALUES (?, ?, ?, 0, 0)")) {
+		try (PreparedStatement stmt = conn.prepareStatement(
+				"INSERT INTO Faction (FactionID, Short, Name, Value, BoardPosition) VALUES (?, ?, ?, 0, 0)")) {
 			stmt.setInt(1, fac.getID());
 			stmt.setString(2, fac.getShortName());
 			stmt.setString(3, fac.getLongName());
@@ -200,6 +200,16 @@ public class SQLManager {
 		try (PreparedStatement stmt = conn.prepareStatement("UPDATE PlayerData SET FactionID = ? WHERE UUID = ?")) {
 			stmt.setInt(1, id);
 			stmt.setString(2, uuid.toString());
+			stmt.execute();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	public void unclaimAll(int facID) {
+		checkConnection();
+		try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Claim WHERE FactionID = ?")) {
+			stmt.setInt(1, facID);
 			stmt.execute();
 		} catch (SQLException e1) {
 			e1.printStackTrace();

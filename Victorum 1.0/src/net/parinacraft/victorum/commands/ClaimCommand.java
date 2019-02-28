@@ -1,7 +1,5 @@
 package net.parinacraft.victorum.commands;
 
-import java.util.HashMap;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -38,22 +36,8 @@ public class ClaimCommand implements CommandExecutor {
 					"§b/claim buy <ID>§e, jossa ID on claimin sijainti, esim. F45. Tämä ostaa plotin ja valtaa alueen factillesi.");
 			sender.sendMessage("§b/claim tp <ID>§e, teleporttaa claimillesi, jos se on factisi omistuksessa.");
 		} else if (args.length == 1) {
-			if (args[0].equalsIgnoreCase("buy")) {
-				if (pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID() == 0) {
-					// Not in a faction
-					sender.sendMessage("§eEt ole factionissa.");
-					sender.sendMessage("§eVoit luoda factionin komennolla /f create <nimi>");
-					return true;
-				}
-				int claimFaction = pl.getClaimHandler().getClaim(chunkX, chunkZ).getFactionID();
-				if (claimFaction != 0) {
-					// TODO: Overclaiming
-					sender.sendMessage("§eTämä alue on jo claimattu.");
-					return true;
-				}
-
-				pl.getClaimHandler().create(chunkX, chunkZ, playerFac.getID());
-				p.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " claimattu.");
+			if (args[0].equalsIgnoreCase("buy") || args[0].equalsIgnoreCase("claim")) {
+				claim(p, playerFac, chunkX, chunkZ);
 			} else if (args[0].equalsIgnoreCase("map")) {
 				openMap(p, p.getLocation().getChunk().getX(), p.getLocation().getChunk().getZ());
 			} else if (args[0].equalsIgnoreCase("create")) {
@@ -62,8 +46,26 @@ public class ClaimCommand implements CommandExecutor {
 				sender.sendMessage("§eKomentoa ei prosessoitu.");
 			}
 		} else if (args.length == 2) {
-			if (args[0].equalsIgnoreCase("buy")) {
+			if (args[0].equalsIgnoreCase("buy") || args[0].equalsIgnoreCase("claim")) {
+				try {
+					int rad = Integer.parseInt(args[1]);
+					if (rad < 1) {
+						p.sendMessage("§eLiian pieni säde: " + rad);
+						return true;
+					}
+					if (rad > 3) {
+						p.sendMessage("§eLiian iso säde: " + rad);
+						return true;
+					}
 
+					for (int i = -rad+1; i < rad; i++) {
+						for (int j = -rad+1; j < rad; j++) {
+							claim(p, playerFac, chunkX + i, chunkZ + j);
+						}
+					}
+				} catch (Exception e) {
+					sender.sendMessage("§c/f claim <säde>");
+				}
 			} else if (args[0].equalsIgnoreCase("create")) {
 				// Create a new faction
 				String name = args[1].toUpperCase();
@@ -97,6 +99,25 @@ public class ClaimCommand implements CommandExecutor {
 		return true;
 	}
 
+	private void claim(Player claimer, Faction fac, int chunkX, int chunkZ) {
+		if (pl.getPlayerDataHandler().getPlayerData(claimer.getUniqueId()).getFactionID() == 0) {
+			// Not in a faction
+			claimer.sendMessage("§eEt ole factionissa.");
+			claimer.sendMessage("§eVoit luoda factionin komennolla /f create <nimi>");
+			return;
+		}
+		int claimFaction = pl.getClaimHandler().getClaim(chunkX, chunkZ).getFactionID();
+		if (claimFaction != 0) {
+			// TODO: Overclaiming
+			claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " on jo varattu!");
+			return;
+		}
+
+		pl.getClaimHandler().create(chunkX, chunkZ, fac.getID());
+		claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " claimattu!");
+
+	}
+
 	private void openMap(Player p, int centerChunkX, int centerChunkZ) {
 		Inventory inv = Bukkit.createInventory(null, 9 * 7, "§e/claim map");
 		// 14 enemy, 4 neutral, 5 friend
@@ -105,7 +126,7 @@ public class ClaimCommand implements CommandExecutor {
 				int inventoryIndex = 31 + i + j * 9;
 				Claim c = pl.getClaimHandler().getClaim(centerChunkX + i, centerChunkZ + j);
 				int id = c.getFactionID();
-				byte relColor = 4;
+				byte relColor = 5;
 				if (id == 0)
 					inv.setItem(inventoryIndex, new ItemStack(Material.STAINED_CLAY, 1, (byte) 4));
 				else {

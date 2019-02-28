@@ -22,10 +22,11 @@ public class FactionHandler {
 		return Preconditions.checkNotNull(factions.get(id));
 	}
 
-	public void delete(int id) {
-		factions.remove(id);
+	public void delete(int facID) {
+		factions.remove(facID);
+		pl.getClaimHandler().unclaimAll(facID);
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-			pl.getSqlManager().removeFaction(id);
+			pl.getSqlManager().removeFaction(facID);
 		});
 	}
 
