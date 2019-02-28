@@ -1,6 +1,8 @@
 package net.parinacraft.victorum.data;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -13,7 +15,7 @@ public class PlayerDataHandler {
 
 	public PlayerDataHandler(Victorum pl) {
 		this.pl = pl;
-		this.playerData = SQLManager.loadPlayerData();
+		this.playerData = pl.getSqlManager().loadPlayerData();
 	}
 
 	public PlayerData getPlayerData(UUID id) {
@@ -22,12 +24,16 @@ public class PlayerDataHandler {
 
 	public void checkForExistingData(UUID UUID) {
 		if (!playerData.containsKey(UUID)) {
-			playerData.put(UUID, new PlayerData(UUID, 0));
+			playerData.put(UUID, new PlayerData(pl, UUID, 0));
 
 			// Update database
 			Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-				SQLManager.createPlayerData(UUID);
+				pl.getSqlManager().createPlayerData(UUID);
 			});
 		}
+	}
+
+	public Set<PlayerData> getAllData() {
+		return new HashSet<PlayerData>(playerData.values());
 	}
 }

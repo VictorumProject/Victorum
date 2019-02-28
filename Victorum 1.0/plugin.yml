@@ -2,5 +2,9 @@ main: net.parinacraft.victorum.Victorum
 name: Victorum
 version: 1.0.0
 author: Juubes
+webite: https://parinacraft.net
 commands:
-  claim: 
+  claim:
+    aliases:
+    - faction
+    - f

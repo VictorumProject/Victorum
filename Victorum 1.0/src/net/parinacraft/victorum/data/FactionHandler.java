@@ -15,7 +15,7 @@ public class FactionHandler {
 
 	public FactionHandler(Victorum pl) {
 		this.pl = pl;
-		factions = SQLManager.loadFactions();
+		factions = pl.getSqlManager().loadFactions();
 	}
 
 	public Faction getFaction(int id) {
@@ -23,15 +23,24 @@ public class FactionHandler {
 	}
 
 	public void delete(int id) {
-		// TOOD: Update db
 		factions.remove(id);
+		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
+			pl.getSqlManager().removeFaction(id);
+		});
 	}
 
 	public void create(Faction fac) {
-		// TOOD: Update db
 		factions.put(fac.getID(), fac);
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-			SQLManager.createFaction(factions.get(fac.getID()));
+			pl.getSqlManager().createFaction(factions.get(fac.getID()));
 		});
+	}
+
+	public boolean exists(String shortName) {
+		for (Faction fac : factions.values()) {
+			if (fac.getShortName().contentEquals(shortName))
+				return true;
+		}
+		return false;
 	}
 }

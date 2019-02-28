@@ -22,11 +22,16 @@ import net.parinacraft.victorum.claim.Faction;
  * Handles SQL connecting and executing of queries
  */
 public class SQLManager {
+	private final Victorum pl;
 
-	private static Connection conn;
-	private static String DB_NAME;
+	private Connection conn;
+	private String DB_NAME;
 
-	private static void checkConnection() {
+	public SQLManager(Victorum pl) {
+		this.pl = pl;
+	}
+
+	private void checkConnection() {
 		if (conn == null) {
 			FileConfiguration conf = Victorum.getPlugin().getConfig();
 			String pw = conf.getString("mysql.password");
@@ -58,15 +63,15 @@ public class SQLManager {
 		}
 	}
 
-	public static void createDatabases() {
+	public void createDatabases() {
 		checkConnection();
 		try {
 			Statement stmt = conn.createStatement();
 			stmt.addBatch("CREATE TABLE IF NOT EXISTS PlayerData (UUID varchar(36), FactionID int, UNIQUE (UUID))");
 			stmt.addBatch("CREATE TABLE IF NOT EXISTS Claim (ChunkX int(5), ChunkZ int(5), FactionID int)");
-			stmt.addBatch("CREATE TABLE IF NOT EXISTS Faction (FactionID int, Short varchar("
-					+ Opt.MAX_FACTION_NAME_SHORT + "), Name varchar(" + Opt.MAX_FACTION_NAME_LONG
-					+ "), UNIQUE (FactionID, Short))");
+			stmt.addBatch(
+					"CREATE TABLE IF NOT EXISTS Faction (FactionID int, Short varchar(" + Opt.MAX_FACTION_NAME_SHORT
+							+ "), Name varchar(" + Opt.MAX_FACTION_NAME_LONG + "), UNIQUE (FactionID, Short))");
 			// Create default faction
 			stmt.addBatch("INSERT IGNORE INTO Faction (FactionID, Short, Name) VALUES (0, 'VICT', 'Victorum')");
 			stmt.executeBatch();
@@ -75,7 +80,7 @@ public class SQLManager {
 		}
 	}
 
-	public static HashMap<Integer, Faction> loadFactions() {
+	public HashMap<Integer, Faction> loadFactions() {
 		checkConnection();
 		HashMap<Integer, Faction> val = new HashMap<>();
 		try (Statement stmt = conn.createStatement()) {
@@ -93,7 +98,7 @@ public class SQLManager {
 		return val;
 	}
 
-	public static HashMap<UUID, PlayerData> loadPlayerData() {
+	public HashMap<UUID, PlayerData> loadPlayerData() {
 		checkConnection();
 		HashMap<UUID, PlayerData> val = new HashMap<>();
 		try (Statement stmt = conn.createStatement()) {
@@ -101,7 +106,7 @@ public class SQLManager {
 				while (rs.next()) {
 					UUID id = UUID.fromString(rs.getString("UUID"));
 					int facID = rs.getInt("FactionID");
-					val.put(id, new PlayerData(id, facID));
+					val.put(id, new PlayerData(pl, id, facID));
 				}
 			}
 		} catch (Exception e) {
@@ -110,7 +115,7 @@ public class SQLManager {
 		return val;
 	}
 
-	public static HashMap<Integer, Claim> loadClaims() {
+	public HashMap<Integer, Claim> loadClaims() {
 		checkConnection();
 		HashMap<Integer, Claim> val = new HashMap<>();
 		try (Statement stmt = conn.createStatement()) {
@@ -129,7 +134,7 @@ public class SQLManager {
 		return val;
 	}
 
-	public static void createPlayerData(UUID uuid) {
+	public void createPlayerData(UUID uuid) {
 		checkConnection();
 		// Make sure there is data
 		try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO PlayerData VALUES (?, 0)")) {
@@ -140,7 +145,7 @@ public class SQLManager {
 		}
 	}
 
-	public static void createFaction(Faction fac) {
+	public void createFaction(Faction fac) {
 		checkConnection();
 		try (PreparedStatement stmt = conn
 				.prepareStatement("INSERT INTO Faction (FactionID, Short, Name) VALUES (?, ?, ?)")) {
@@ -153,7 +158,17 @@ public class SQLManager {
 		}
 	}
 
-	public static void createClaim(Claim claim) {
+	public void removeFaction(int id) {
+		checkConnection();
+		try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Faction WHERE FactionID = ?")) {
+			stmt.setInt(1, id);
+			stmt.execute();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	public void createClaim(Claim claim) {
 		checkConnection();
 		try (PreparedStatement stmt = conn
 				.prepareStatement("INSERT INTO Claim (ChunkX, ChunkZ, FactionID) VALUES (?, ?, ?)")) {
@@ -166,11 +181,22 @@ public class SQLManager {
 		}
 	}
 
-	public static void removeClaim(int chunkX, int chunkZ) {
+	public void removeClaim(int chunkX, int chunkZ) {
 		checkConnection();
 		try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Claim WHERE ChunkX = ? AND ChunkZ = ?")) {
 			stmt.setInt(1, chunkX);
 			stmt.setInt(2, chunkZ);
+			stmt.execute();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	public void setFactionID(UUID uuid, int id) {
+		checkConnection();
+		try (PreparedStatement stmt = conn.prepareStatement("UPDATE PlayerData SET FactionID = ? WHERE UUID = ?")) {
+			stmt.setInt(1, id);
+			stmt.setString(2, uuid.toString());
 			stmt.execute();
 		} catch (SQLException e1) {
 			e1.printStackTrace();

@@ -13,24 +13,28 @@ public class ClaimHandler {
 
 	public ClaimHandler(Victorum pl) {
 		this.pl = pl;
-		claims = SQLManager.loadClaims();
+		claims = pl.getSqlManager().loadClaims();
 	}
 
 	public Claim getClaim(int chunkX, int chunkZ) {
-		return claims.get(toID(chunkX, chunkZ));
+		// Return default faction with coords if not claimed
+		int key = toID(chunkX, chunkZ);
+		if (!claims.containsKey(key))
+			return new Claim(chunkX, chunkZ, 0);
+		return claims.get(key);
 	}
 
 	public void create(int chunkX, int chunkZ, Claim claim) {
 		claims.put(toID(chunkX, chunkZ), claim);
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-			SQLManager.createClaim(claim);
+			pl.getSqlManager().createClaim(claim);
 		});
 	}
 
 	public void unclaim(int chunkX, int chunkZ) {
 		claims.remove(toID(chunkX, chunkZ));
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-			SQLManager.removeClaim(chunkX, chunkZ);
+			pl.getSqlManager().removeClaim(chunkX, chunkZ);
 		});
 	}
 

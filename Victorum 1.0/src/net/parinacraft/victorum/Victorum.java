@@ -17,6 +17,7 @@ public class Victorum extends JavaPlugin {
 	private FactionHandler factionHandler;
 	private PlayerDataHandler playerDataHandler;
 	private ClaimHandler claimHandler;
+	private SQLManager sqlManager;
 
 	@Override
 	public void onEnable() {
@@ -29,7 +30,8 @@ public class Victorum extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(new ChatListener(this), this);
 
 		// Create databases
-		SQLManager.createDatabases();
+		sqlManager = new SQLManager(this);
+		sqlManager.createDatabases();
 
 		// Load all data from database to memory
 		this.factionHandler = new FactionHandler(this);
@@ -56,5 +58,13 @@ public class Victorum extends JavaPlugin {
 
 	public PlayerDataHandler getPlayerDataHandler() {
 		return playerDataHandler;
+	}
+	
+	public SQLManager getSqlManager() {
+		return sqlManager;
+	}
+
+	public static Victorum get() {
+		return (Victorum) Bukkit.getPluginManager().getPlugin("Victorum");
 	}
 }
