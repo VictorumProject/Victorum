@@ -31,15 +31,19 @@ public class Victorum extends JavaPlugin {
 
 		// Prepare global options
 		Opt.init(this);
-		
+
 		// Create databases
 		sqlManager = new SQLManager(this);
 		sqlManager.createDatabases();
 
 		// Load all data from database to memory
+		getLogger().info("Importing data from MySQL...");
+		long start = System.nanoTime();
 		this.factionHandler = new FactionHandler(this);
 		this.playerDataHandler = new PlayerDataHandler(this);
 		this.claimHandler = new ClaimHandler(this);
+		int timeMS = (int) ((System.nanoTime() - start) / 1E6);
+		getLogger().info("Done (" + timeMS + "ms)");
 	}
 
 	@Override
@@ -62,7 +66,7 @@ public class Victorum extends JavaPlugin {
 	public PlayerDataHandler getPlayerDataHandler() {
 		return playerDataHandler;
 	}
-	
+
 	public SQLManager getSqlManager() {
 		return sqlManager;
 	}

@@ -10,7 +10,6 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.CreatureType;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.IronGolem;
 
 import com.google.common.base.Preconditions;
 
@@ -100,5 +99,9 @@ public class FactionHandler {
 				return true;
 		}
 		return false;
+	}
+
+	public boolean exists(int newID) {
+		return factions.containsKey(newID);
 	}
 }

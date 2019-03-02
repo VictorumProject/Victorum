@@ -102,13 +102,16 @@ public class ClaimCommand implements CommandExecutor {
 					sender.sendMessage("§eTämä faction on jo olemassa.");
 					return true;
 				}
-				Faction created = new Faction(pl, (int) (Math.random() * Integer.MAX_VALUE), name, name, 0, -1);
+				// Generate a new ID randomly. If there's more than 2 billion factions, we're
+				// screwd;
+				int newID;
+				do {
+					newID = (int) (Math.random() * Integer.MAX_VALUE);
+				} while (pl.getFactionHandler().exists(newID));
+				Faction created = new Faction(pl, newID, name, name, 0, -1);
 				pl.getFactionHandler().create(created);
 				pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).setFactionID(created.getID());
 				sender.sendMessage("§eFaction luotu! Uusi nimi: " + created.getShortName() + ".");
-
-			} else if (args[0].equalsIgnoreCase("tp")) {
-
 			}
 		}
 		return true;
@@ -117,7 +120,7 @@ public class ClaimCommand implements CommandExecutor {
 	private void leaveFaction(Player p, Faction playerFac) {
 		PlayerData data = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
 		int oldFactionID = data.getFactionID();
-		if (oldFactionID==0) {
+		if (oldFactionID == 0) {
 			p.sendMessage("§eEt ole missään factionissa. /f create <nimi>");
 			return;
 		}
