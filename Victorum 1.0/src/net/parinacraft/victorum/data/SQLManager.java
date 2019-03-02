@@ -92,7 +92,7 @@ public class SQLManager {
 					String longName = rs.getString("Name");
 					long value = rs.getLong("Value");
 					int boardPosition = rs.getInt("BoardPosition");
-					val.put(rs.getInt("FactionID"), new Faction(id, shortName, longName, value, boardPosition));
+					val.put(rs.getInt("FactionID"), new Faction(pl, id, shortName, longName, value, boardPosition));
 				}
 			}
 		} catch (Exception e) {
@@ -210,6 +210,17 @@ public class SQLManager {
 		checkConnection();
 		try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Claim WHERE FactionID = ?")) {
 			stmt.setInt(1, facID);
+			stmt.execute();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	public void setValue(int factionID, long value) {
+		checkConnection();
+		try (PreparedStatement stmt = conn.prepareStatement("UPDATE Faction SET Value = ? WHERE FactionID = ?")) {
+			stmt.setLong(1, value);
+			stmt.setInt(2, factionID);
 			stmt.execute();
 		} catch (SQLException e1) {
 			e1.printStackTrace();

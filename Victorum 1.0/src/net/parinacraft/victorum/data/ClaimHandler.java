@@ -54,4 +54,13 @@ public class ClaimHandler {
 		});
 	}
 
+	public Set<Claim> getAllClaims(int facID) {
+		Set<Claim> claims = new HashSet<Claim>();
+		for (Claim claim : this.claims.values()) {
+			if (claim.getFactionID() == facID)
+				claims.add(claim);
+		}
+		return claims;
+	}
+
 }

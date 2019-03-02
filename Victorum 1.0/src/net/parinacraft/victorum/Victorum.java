@@ -29,6 +29,9 @@ public class Victorum extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(new ClaimInvClickCanceller(this), this);
 		Bukkit.getPluginManager().registerEvents(new ChatListener(this), this);
 
+		// Prepare global options
+		Opt.init(this);
+		
 		// Create databases
 		sqlManager = new SQLManager(this);
 		sqlManager.createDatabases();

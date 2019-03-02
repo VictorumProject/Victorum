@@ -38,6 +38,12 @@ public class ClaimCommand implements CommandExecutor {
 			sender.sendMessage("§b/claim tp <ID>§e, teleporttaa claimillesi, jos se on factisi omistuksessa.");
 		} else if (args.length == 1) {
 			if (args[0].equalsIgnoreCase("buy") || args[0].equalsIgnoreCase("claim")) {
+				if (pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID() == 0) {
+					// Not in a faction
+					p.sendMessage("§eEt ole factionissa.");
+					p.sendMessage("§eVoit luoda factionin komennolla /f create <nimi>");
+					return true;
+				}
 				claim(p, playerFac, chunkX, chunkZ);
 			} else if (args[0].equalsIgnoreCase("map")) {
 				openMap(p, p.getLocation().getChunk().getX(), p.getLocation().getChunk().getZ());
@@ -50,6 +56,12 @@ public class ClaimCommand implements CommandExecutor {
 			}
 		} else if (args.length == 2) {
 			if (args[0].equalsIgnoreCase("buy") || args[0].equalsIgnoreCase("claim")) {
+				if (pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID() == 0) {
+					// Not in a faction
+					p.sendMessage("§eEt ole factionissa.");
+					p.sendMessage("§eVoit luoda factionin komennolla /f create <nimi>");
+					return true;
+				}
 				try {
 					int rad = Integer.parseInt(args[1]);
 					if (rad < 1) {
@@ -90,7 +102,7 @@ public class ClaimCommand implements CommandExecutor {
 					sender.sendMessage("§eTämä faction on jo olemassa.");
 					return true;
 				}
-				Faction created = new Faction((int) (Math.random() * Integer.MAX_VALUE), name, name, 0, -1);
+				Faction created = new Faction(pl, (int) (Math.random() * Integer.MAX_VALUE), name, name, 0, -1);
 				pl.getFactionHandler().create(created);
 				pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).setFactionID(created.getID());
 				sender.sendMessage("§eFaction luotu! Uusi nimi: " + created.getShortName() + ".");
@@ -105,6 +117,10 @@ public class ClaimCommand implements CommandExecutor {
 	private void leaveFaction(Player p, Faction playerFac) {
 		PlayerData data = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
 		int oldFactionID = data.getFactionID();
+		if (oldFactionID==0) {
+			p.sendMessage("§eEt ole missään factionissa. /f create <nimi>");
+			return;
+		}
 		p.sendMessage("§eLähdit factionista " + data.getFaction().getLongName() + ".");
 		data.setFactionID(0);
 
@@ -115,12 +131,6 @@ public class ClaimCommand implements CommandExecutor {
 	}
 
 	private void claim(Player claimer, Faction fac, int chunkX, int chunkZ) {
-		if (pl.getPlayerDataHandler().getPlayerData(claimer.getUniqueId()).getFactionID() == 0) {
-			// Not in a faction
-			claimer.sendMessage("§eEt ole factionissa.");
-			claimer.sendMessage("§eVoit luoda factionin komennolla /f create <nimi>");
-			return;
-		}
 		int claimFaction = pl.getClaimHandler().getClaim(chunkX, chunkZ).getFactionID();
 		if (claimFaction != 0) {
 			// TODO: Overclaiming
