@@ -3,3 +3,5 @@ mysql:
   database: Victorum
   user: user
   password: password
+
+map-server-port: 3539

@@ -12,15 +12,18 @@ import net.parinacraft.victorum.events.ChatListener;
 import net.parinacraft.victorum.events.ChestOpenListener;
 import net.parinacraft.victorum.events.ClaimInvClickCanceller;
 import net.parinacraft.victorum.events.ConnectionListener;
+import net.parinacraft.victorum.http.MapServer;
 
 public class Victorum extends JavaPlugin {
 	private FactionHandler factionHandler;
 	private PlayerDataHandler playerDataHandler;
 	private ClaimHandler claimHandler;
 	private SQLManager sqlManager;
+	private MapServer mapServer;
 
 	@Override
 	public void onEnable() {
+		// Reload?
 		saveDefaultConfig();
 		getCommand("claim").setExecutor(new ClaimCommand(this));
 
@@ -44,11 +47,13 @@ public class Victorum extends JavaPlugin {
 		this.claimHandler = new ClaimHandler(this);
 		int timeMS = (int) ((System.nanoTime() - start) / 1E6);
 		getLogger().info("Done (" + timeMS + "ms)");
+
+		mapServer = new MapServer(this);
+		mapServer.startAsync();
 	}
 
 	@Override
 	public void onDisable() {
-
 	}
 
 	public static Victorum getPlugin() {
@@ -69,6 +74,10 @@ public class Victorum extends JavaPlugin {
 
 	public SQLManager getSqlManager() {
 		return sqlManager;
+	}
+
+	public MapServer getMapServer() {
+		return mapServer;
 	}
 
 	public static Victorum get() {

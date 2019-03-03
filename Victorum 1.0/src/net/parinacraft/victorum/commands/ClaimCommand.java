@@ -156,7 +156,7 @@ public class ClaimCommand implements CommandExecutor {
 				int id = c.getFactionID();
 				byte relColor = 5;
 				if (id == 0)
-					inv.setItem(inventoryIndex, new ItemStack(Material.STAINED_CLAY, 1, (byte) 4));
+					inv.setItem(inventoryIndex, new ItemStack(Material.AIR, 1, (byte) 4));
 				else {
 					// TODO: Colour by relations
 					Faction fac = c.getFaction();
