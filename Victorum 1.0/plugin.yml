@@ -3,6 +3,7 @@ name: Victorum
 version: 1.0.0
 author: Juubes
 webite: https://parinacraft.net
+depend: [Vault]
 commands:
   claim:
     aliases:

@@ -1,5 +1,8 @@
 package net.parinacraft.victorum.commands;
 
+import java.util.HashMap;
+import java.util.UUID;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
@@ -18,9 +21,11 @@ import net.parinacraft.victorum.data.PlayerData;
 
 public class ClaimCommand implements CommandExecutor {
 	private final Victorum pl;
+	private final HashMap<UUID, Long> confirmLeave;
 
 	public ClaimCommand(Victorum pl) {
 		this.pl = pl;
+		this.confirmLeave = new HashMap<>();
 	}
 
 	@Override
@@ -43,25 +48,19 @@ public class ClaimCommand implements CommandExecutor {
 			sender.sendMessage("§e    /" + lbl + " leave");
 		} else if (args.length == 1) {
 			if (args[0].equalsIgnoreCase("buy") || args[0].equalsIgnoreCase("claim")) {
-				if (pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID() == 0) {
-					// Not in a faction
-					p.sendMessage("§eEt ole factionissa.");
-					p.sendMessage("§eVoit luoda factionin komennolla /" + lbl + " create <nimi>");
-					return true;
-				}
 				claim(p, playerFac, chunkX, chunkZ);
 			} else if (args[0].equalsIgnoreCase("map")) {
 				openMap(p, p.getLocation().getChunk().getX(), p.getLocation().getChunk().getZ());
 			} else if (args[0].equalsIgnoreCase("create")) {
-				sender.sendMessage("§c/" + lbl + " create <nimi>");
+				sender.sendMessage("§c/" + lbl + " create <lyhenne>");
 			} else if (args[0].equalsIgnoreCase("leave")) {
-				leaveFaction(p, playerFac);
+				processFactionLeave(p, playerFac);
 			} else {
 				sender.sendMessage("§eKomentoa ei prosessoitu.");
 			}
 		} else if (args.length == 2) {
 			if (args[0].equalsIgnoreCase("buy") || args[0].equalsIgnoreCase("claim")) {
-				processBuyClaim(p, playerFac, p.getLocation().getChunk(), args[1]);
+				claimRadius(p, playerFac, p.getLocation().getChunk(), args[0], args[1]);
 			} else if (args[0].equalsIgnoreCase("create")) {
 				processFactionCreate(p, args[1]);
 			}
@@ -69,11 +68,11 @@ public class ClaimCommand implements CommandExecutor {
 		return true;
 	}
 
-	private void processBuyClaim(Player p, Faction fac, Chunk ch, String arg1) {
+	private void claimRadius(Player p, Faction fac, Chunk ch, String arg0, String arg1) {
 		if (pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID() == 0) {
 			// Not in a faction
 			p.sendMessage("§eEt ole factionissa.");
-			p.sendMessage("§eVoit luoda factionin komennolla /f create <nimi>");
+			p.sendMessage("§eVoit luoda factionin komennolla /f create <lyhenne>");
 			return;
 		}
 		try {
@@ -93,28 +92,18 @@ public class ClaimCommand implements CommandExecutor {
 				}
 			}
 		} catch (Exception e) {
-			p.sendMessage("§c/f claim <säde>");
+			p.sendMessage("§c/f " + arg0 + " <säde>");
 		}
 
-	}
-
-	private void leaveFaction(Player p, Faction playerFac) {
-		PlayerData data = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
-		int oldFactionID = data.getFactionID();
-		if (oldFactionID == 0) {
-			p.sendMessage("§eEt ole missään factionissa. /f create <nimi>");
-			return;
-		}
-		p.sendMessage("§eLähdit factionista " + data.getFaction().getLongName() + ".");
-		data.setFactionID(0);
-
-		if (pl.getFactionHandler().getFaction(oldFactionID).getPlayers().size() == 0) {
-			pl.getFactionHandler().delete(oldFactionID);
-			p.sendMessage("§eOlit viimeinen factionissasi, joten se lopetettiin.");
-		}
 	}
 
 	private void claim(Player claimer, Faction fac, int chunkX, int chunkZ) {
+		if (pl.getPlayerDataHandler().getPlayerData(claimer.getUniqueId()).getFactionID() == 0) {
+			// Not in a faction
+			claimer.sendMessage("§eEt ole factionissa.");
+			claimer.sendMessage("§eVoit luoda factionin komennolla /f create <lyhenne>");
+			return;
+		}
 		int claimFaction = pl.getClaimHandler().getClaim(chunkX, chunkZ).getFactionID();
 		if (claimFaction != 0) {
 			// TODO: Overclaiming
@@ -128,7 +117,7 @@ public class ClaimCommand implements CommandExecutor {
 	}
 
 	private void openMap(Player p, int centerChunkX, int centerChunkZ) {
-		Inventory inv = Bukkit.createInventory(null, 9 * 7, "§e/claim map");
+		Inventory inv = Bukkit.createInventory(null, 9 * 7, "§e/f map");
 		// 14 enemy, 4 neutral, 5 friend
 		for (int i = -4; i < 5; i++) {
 			for (int j = -3; j < 4; j++) {
@@ -152,8 +141,15 @@ public class ClaimCommand implements CommandExecutor {
 	private void processFactionCreate(Player p, String arg1) {
 		// Create a new faction
 		String name = arg1.toUpperCase();
+		for (int i = 0; i < name.length(); i++) {
+			char c = name.charAt(i);
+			if (!Opt.ALLOWED_FACTION_NAME_CHARS.contains(c)) {
+				p.sendMessage("§eFactin lyhenne ei voi sisältää '" + c + "' merkkiä.");
+				return;
+			}
+		}
 		if (name.length() > Opt.MAX_FACTION_NAME_SHORT) {
-			p.sendMessage("§eLiian pitkä nimi factille: " + arg1);
+			p.sendMessage("§eLiian pitkä lyhenne factille: " + arg1);
 			return;
 		}
 
@@ -161,7 +157,7 @@ public class ClaimCommand implements CommandExecutor {
 				p.getUniqueId()).getFactionID());
 		if (current.getID() != 0) {
 			// Already in a fac
-			p.sendMessage("§eFactionisi nimi on " + current.getShortName());
+			p.sendMessage("§eFactionisi lyhenne on " + current.getShortName());
 			p.sendMessage("§eVoit jättää factionisi komennolla /faction leave.");
 			return;
 		}
@@ -170,7 +166,7 @@ public class ClaimCommand implements CommandExecutor {
 			p.sendMessage("§eTämä faction on jo olemassa.");
 			return;
 		}
-		// Generate a new ID randomly. If there's more than 2 billion factions, we're
+		// Generate a new ID randomly. If there's more a billion factions, we're
 		// screwd;
 		int newID;
 		do {
@@ -180,5 +176,37 @@ public class ClaimCommand implements CommandExecutor {
 		pl.getFactionHandler().create(created);
 		pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).setFactionID(created.getID());
 		p.sendMessage("§eFaction luotu! Uusi nimi: " + created.getShortName() + ".");
+	}
+
+	private void processFactionLeave(Player p, Faction playerFac) {
+		PlayerData data = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
+		int oldFactionID = data.getFactionID();
+		if (oldFactionID == 0) {
+			p.sendMessage("§eEt ole missään factionissa. /f create <lyhenne>");
+			return;
+		}
+		if (confirmLeave.containsKey(p.getUniqueId())) {
+			long lastTime = confirmLeave.get(p.getUniqueId());
+			if (lastTime + 10000 < System.currentTimeMillis()) {
+				p.sendMessage(
+						"§eJos haluat jättää factionisi, tee /f leave uudelleen 10 sekunnin sisällä.");
+				confirmLeave.put(p.getUniqueId(), System.currentTimeMillis());
+				return;
+			}
+		} else {
+			confirmLeave.put(p.getUniqueId(), System.currentTimeMillis());
+			p.sendMessage(
+					"§eJos haluat jättää factionisi, tee /f leave uudelleen 10 sekunnin sisällä.");
+			return;
+		}
+		confirmLeave.remove(p.getUniqueId());
+
+		p.sendMessage("§eLähdit factionista " + data.getFaction().getLongName() + ".");
+		data.setFactionID(0);
+
+		if (pl.getFactionHandler().getFaction(oldFactionID).getPlayers().size() == 0) {
+			pl.getFactionHandler().delete(oldFactionID);
+			p.sendMessage("§eOlit viimeinen factionissasi, joten se lopetettiin.");
+		}
 	}
 }

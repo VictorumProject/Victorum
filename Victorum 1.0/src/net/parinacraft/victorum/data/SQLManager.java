@@ -41,11 +41,13 @@ public class SQLManager {
 
 			System.out.println("Connecting to " + server + "/" + DB_NAME + " as user " + user);
 			try {
-				conn = DriverManager.getConnection("jdbc:mysql://" + server + "/" + DB_NAME, user, pw);
+				conn = DriverManager.getConnection("jdbc:mysql://" + server + "/" + DB_NAME, user,
+						pw);
 			} catch (SQLException e) {
 				e.printStackTrace();
 				for (Player p : Bukkit.getOnlinePlayers()) {
-					p.kickPlayer("§e§lVictorum\n§b      Palvelin uudelleenkäynnistyy teknisistä syistä.");
+					p.kickPlayer(
+							"§e§lVictorum\n§b      Palvelin uudelleenkäynnistyy teknisistä syistä.");
 				}
 				Bukkit.shutdown();
 			}
@@ -67,10 +69,12 @@ public class SQLManager {
 		checkConnection();
 		try {
 			Statement stmt = conn.createStatement();
-			stmt.addBatch("CREATE TABLE IF NOT EXISTS PlayerData (UUID varchar(36), FactionID int, UNIQUE (UUID))");
-			stmt.addBatch("CREATE TABLE IF NOT EXISTS Claim (ChunkX int(5), ChunkZ int(5), FactionID int)");
-			stmt.addBatch("CREATE TABLE IF NOT EXISTS Faction (FactionID int, Short varchar("
-					+ Opt.MAX_FACTION_NAME_SHORT + "), Name varchar(" + Opt.MAX_FACTION_NAME_LONG
+			stmt.addBatch(
+					"CREATE TABLE IF NOT EXISTS PlayerData (UUID varchar(36), FactionID int, UNIQUE (UUID))");
+			stmt.addBatch(
+					"CREATE TABLE IF NOT EXISTS Claim (ChunkX int(5), ChunkZ int(5), FactionID int, RentExpiration Date)");
+			stmt.addBatch("CREATE TABLE IF NOT EXISTS Faction (FactionID int PRIMARY KEY, Short varchar("
+					+ Opt.MAX_FACTION_NAME_SHORT + ") PRIMARY KEY, Name varchar(" + Opt.MAX_FACTION_NAME_LONG
 					+ "), Value int(30), BoardPosition int, UNIQUE (FactionID, Short))");
 			// Create default faction
 			stmt.addBatch(
@@ -92,7 +96,8 @@ public class SQLManager {
 					String longName = rs.getString("Name");
 					long value = rs.getLong("Value");
 					int boardPosition = rs.getInt("BoardPosition");
-					val.put(rs.getInt("FactionID"), new Faction(pl, id, shortName, longName, value, boardPosition));
+					val.put(rs.getInt("FactionID"), new Faction(pl, id, shortName, longName, value,
+							boardPosition));
 				}
 			}
 		} catch (Exception e) {
@@ -140,7 +145,8 @@ public class SQLManager {
 	public void createPlayerData(UUID uuid) {
 		checkConnection();
 		// Make sure there is data
-		try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO PlayerData VALUES (?, 0)")) {
+		try (PreparedStatement stmt = conn.prepareStatement(
+				"INSERT INTO PlayerData VALUES (?, 0)")) {
 			stmt.setString(1, uuid.toString());
 			stmt.execute();
 		} catch (SQLException e1) {
@@ -163,7 +169,8 @@ public class SQLManager {
 
 	public void removeFaction(int id) {
 		checkConnection();
-		try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Faction WHERE FactionID = ?")) {
+		try (PreparedStatement stmt = conn.prepareStatement(
+				"DELETE FROM Faction WHERE FactionID = ?")) {
 			stmt.setInt(1, id);
 			stmt.execute();
 		} catch (SQLException e1) {
@@ -173,8 +180,8 @@ public class SQLManager {
 
 	public void createClaim(Claim claim) {
 		checkConnection();
-		try (PreparedStatement stmt = conn
-				.prepareStatement("INSERT INTO Claim (ChunkX, ChunkZ, FactionID) VALUES (?, ?, ?)")) {
+		try (PreparedStatement stmt = conn.prepareStatement(
+				"INSERT INTO Claim (ChunkX, ChunkZ, FactionID) VALUES (?, ?, ?)")) {
 			stmt.setInt(1, claim.getChunkX());
 			stmt.setInt(2, claim.getChunkZ());
 			stmt.setInt(3, claim.getFactionID());
@@ -186,7 +193,8 @@ public class SQLManager {
 
 	public void removeClaim(int chunkX, int chunkZ) {
 		checkConnection();
-		try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Claim WHERE ChunkX = ? AND ChunkZ = ?")) {
+		try (PreparedStatement stmt = conn.prepareStatement(
+				"DELETE FROM Claim WHERE ChunkX = ? AND ChunkZ = ?")) {
 			stmt.setInt(1, chunkX);
 			stmt.setInt(2, chunkZ);
 			stmt.execute();
@@ -197,7 +205,8 @@ public class SQLManager {
 
 	public void setFactionID(UUID uuid, int id) {
 		checkConnection();
-		try (PreparedStatement stmt = conn.prepareStatement("UPDATE PlayerData SET FactionID = ? WHERE UUID = ?")) {
+		try (PreparedStatement stmt = conn.prepareStatement(
+				"UPDATE PlayerData SET FactionID = ? WHERE UUID = ?")) {
 			stmt.setInt(1, id);
 			stmt.setString(2, uuid.toString());
 			stmt.execute();
@@ -208,7 +217,8 @@ public class SQLManager {
 
 	public void unclaimAll(int facID) {
 		checkConnection();
-		try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM Claim WHERE FactionID = ?")) {
+		try (PreparedStatement stmt = conn.prepareStatement(
+				"DELETE FROM Claim WHERE FactionID = ?")) {
 			stmt.setInt(1, facID);
 			stmt.execute();
 		} catch (SQLException e1) {
@@ -218,7 +228,8 @@ public class SQLManager {
 
 	public void setValue(int factionID, long value) {
 		checkConnection();
-		try (PreparedStatement stmt = conn.prepareStatement("UPDATE Faction SET Value = ? WHERE FactionID = ?")) {
+		try (PreparedStatement stmt = conn.prepareStatement(
+				"UPDATE Faction SET Value = ? WHERE FactionID = ?")) {
 			stmt.setLong(1, value);
 			stmt.setInt(2, factionID);
 			stmt.execute();

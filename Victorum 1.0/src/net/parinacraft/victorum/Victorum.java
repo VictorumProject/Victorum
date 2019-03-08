@@ -1,8 +1,10 @@
 package net.parinacraft.victorum;
 
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import net.milkbowl.vault.economy.Economy;
 import net.parinacraft.victorum.commands.ClaimCommand;
 import net.parinacraft.victorum.data.ClaimHandler;
 import net.parinacraft.victorum.data.FactionHandler;
@@ -20,11 +22,15 @@ public class Victorum extends JavaPlugin {
 	private ClaimHandler claimHandler;
 	private SQLManager sqlManager;
 	private MapServer mapServer;
+	public Economy economy;
 
 	@Override
 	public void onEnable() {
 		// Reload?
 		saveDefaultConfig();
+
+		setupEconomy();
+
 		getCommand("claim").setExecutor(new ClaimCommand(this));
 
 		Bukkit.getPluginManager().registerEvents(new ConnectionListener(this), this);
@@ -33,7 +39,7 @@ public class Victorum extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(new ChatListener(this), this);
 
 		// Prepare global options
-		Opt.init(this);
+		Opt.load(this);
 
 		// Create databases
 		sqlManager = new SQLManager(this);
@@ -54,6 +60,16 @@ public class Victorum extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+	}
+
+	private boolean setupEconomy() {
+		RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager()
+				.getRegistration(net.milkbowl.vault.economy.Economy.class);
+		if (economyProvider != null) {
+			economy = economyProvider.getProvider();
+		}
+
+		return (economy != null);
 	}
 
 	public static Victorum getPlugin() {
