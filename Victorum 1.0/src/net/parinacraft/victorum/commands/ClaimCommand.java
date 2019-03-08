@@ -1,6 +1,7 @@
 package net.parinacraft.victorum.commands;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -29,26 +30,30 @@ public class ClaimCommand implements CommandExecutor {
 			return true;
 		}
 		Player p = (Player) sender;
-		final int chunkX = p.getLocation().getChunk().getX(), chunkZ = p.getLocation().getChunk().getZ();
-		final Faction playerFac = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFaction();
+		final int chunkX = p.getLocation().getChunk().getX(), chunkZ = p.getLocation().getChunk()
+				.getZ();
+		final Faction playerFac = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId())
+				.getFaction();
 		if (args.length == 0) {
-			sender.sendMessage("§eVoit käyttää /claim komentoa seuraaviin asioihin:");
-			sender.sendMessage(
-					"§b/claim buy <ID>§e, jossa ID on claimin sijainti, esim. F45. Tämä ostaa plotin ja valtaa alueen factillesi.");
-			sender.sendMessage("§b/claim tp <ID>§e, teleporttaa claimillesi, jos se on factisi omistuksessa.");
+			sender.sendMessage("§eVictorum v" + pl.getDescription().getVersion());
+			sender.sendMessage("§e    /" + lbl + " create");
+			sender.sendMessage("§e    /" + lbl + " claim|buy");
+			sender.sendMessage("§e    /" + lbl + " invite");
+			sender.sendMessage("§e    /" + lbl + " map");
+			sender.sendMessage("§e    /" + lbl + " leave");
 		} else if (args.length == 1) {
 			if (args[0].equalsIgnoreCase("buy") || args[0].equalsIgnoreCase("claim")) {
 				if (pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID() == 0) {
 					// Not in a faction
 					p.sendMessage("§eEt ole factionissa.");
-					p.sendMessage("§eVoit luoda factionin komennolla /f create <nimi>");
+					p.sendMessage("§eVoit luoda factionin komennolla /" + lbl + " create <nimi>");
 					return true;
 				}
 				claim(p, playerFac, chunkX, chunkZ);
 			} else if (args[0].equalsIgnoreCase("map")) {
 				openMap(p, p.getLocation().getChunk().getX(), p.getLocation().getChunk().getZ());
 			} else if (args[0].equalsIgnoreCase("create")) {
-				sender.sendMessage("§c" + lbl + " create <nimi>");
+				sender.sendMessage("§c/" + lbl + " create <nimi>");
 			} else if (args[0].equalsIgnoreCase("leave")) {
 				leaveFaction(p, playerFac);
 			} else {
@@ -56,65 +61,41 @@ public class ClaimCommand implements CommandExecutor {
 			}
 		} else if (args.length == 2) {
 			if (args[0].equalsIgnoreCase("buy") || args[0].equalsIgnoreCase("claim")) {
-				if (pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID() == 0) {
-					// Not in a faction
-					p.sendMessage("§eEt ole factionissa.");
-					p.sendMessage("§eVoit luoda factionin komennolla /f create <nimi>");
-					return true;
-				}
-				try {
-					int rad = Integer.parseInt(args[1]);
-					if (rad < 1) {
-						p.sendMessage("§eLiian pieni säde: " + rad);
-						return true;
-					}
-					if (rad > 3) {
-						p.sendMessage("§eLiian iso säde: " + rad);
-						return true;
-					}
-
-					for (int i = -rad + 1; i < rad; i++) {
-						for (int j = -rad + 1; j < rad; j++) {
-							claim(p, playerFac, chunkX + i, chunkZ + j);
-						}
-					}
-				} catch (Exception e) {
-					sender.sendMessage("§c/f claim <säde>");
-				}
+				processBuyClaim(p, playerFac, p.getLocation().getChunk(), args[1]);
 			} else if (args[0].equalsIgnoreCase("create")) {
-				// Create a new faction
-				String name = args[1].toUpperCase();
-				if (name.length() > Opt.MAX_FACTION_NAME_SHORT) {
-					sender.sendMessage("§eLiian pitkä nimi factille: " + args[1]);
-					return true;
-				}
-
-				Faction current = pl.getFactionHandler()
-						.getFaction(pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID());
-				if (current.getID() != 0) {
-					// Already in a fac
-					sender.sendMessage("§eFactionisi nimi on " + current.getShortName());
-					sender.sendMessage("§eVoit jättää factionisi komennolla /faction leave.");
-					return true;
-				}
-
-				if (pl.getFactionHandler().exists(name)) {
-					sender.sendMessage("§eTämä faction on jo olemassa.");
-					return true;
-				}
-				// Generate a new ID randomly. If there's more than 2 billion factions, we're
-				// screwd;
-				int newID;
-				do {
-					newID = (int) (Math.random() * Integer.MAX_VALUE);
-				} while (pl.getFactionHandler().exists(newID));
-				Faction created = new Faction(pl, newID, name, name, 0, -1);
-				pl.getFactionHandler().create(created);
-				pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).setFactionID(created.getID());
-				sender.sendMessage("§eFaction luotu! Uusi nimi: " + created.getShortName() + ".");
+				processFactionCreate(p, args[1]);
 			}
 		}
 		return true;
+	}
+
+	private void processBuyClaim(Player p, Faction fac, Chunk ch, String arg1) {
+		if (pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID() == 0) {
+			// Not in a faction
+			p.sendMessage("§eEt ole factionissa.");
+			p.sendMessage("§eVoit luoda factionin komennolla /f create <nimi>");
+			return;
+		}
+		try {
+			int rad = Integer.parseInt(arg1);
+			if (rad < 1) {
+				p.sendMessage("§eLiian pieni säde: " + rad);
+				return;
+			}
+			if (rad > 3) {
+				p.sendMessage("§eLiian iso säde: " + rad);
+				return;
+			}
+
+			for (int i = -rad + 1; i < rad; i++) {
+				for (int j = -rad + 1; j < rad; j++) {
+					claim(p, fac, ch.getX() + i, ch.getZ() + j);
+				}
+			}
+		} catch (Exception e) {
+			p.sendMessage("§c/f claim <säde>");
+		}
+
 	}
 
 	private void leaveFaction(Player p, Faction playerFac) {
@@ -160,10 +141,44 @@ public class ClaimCommand implements CommandExecutor {
 				else {
 					// TODO: Colour by relations
 					Faction fac = c.getFaction();
-					inv.setItem(inventoryIndex, new ItemStack(Material.STAINED_CLAY, fac.getBoardPosition(), relColor));
+					inv.setItem(inventoryIndex, new ItemStack(Material.STAINED_CLAY, fac
+							.getBoardPosition(), relColor));
 				}
 			}
 		}
 		p.openInventory(inv);
+	}
+
+	private void processFactionCreate(Player p, String arg1) {
+		// Create a new faction
+		String name = arg1.toUpperCase();
+		if (name.length() > Opt.MAX_FACTION_NAME_SHORT) {
+			p.sendMessage("§eLiian pitkä nimi factille: " + arg1);
+			return;
+		}
+
+		Faction current = pl.getFactionHandler().getFaction(pl.getPlayerDataHandler().getPlayerData(
+				p.getUniqueId()).getFactionID());
+		if (current.getID() != 0) {
+			// Already in a fac
+			p.sendMessage("§eFactionisi nimi on " + current.getShortName());
+			p.sendMessage("§eVoit jättää factionisi komennolla /faction leave.");
+			return;
+		}
+
+		if (pl.getFactionHandler().exists(name)) {
+			p.sendMessage("§eTämä faction on jo olemassa.");
+			return;
+		}
+		// Generate a new ID randomly. If there's more than 2 billion factions, we're
+		// screwd;
+		int newID;
+		do {
+			newID = (int) (Math.random() * Integer.MAX_VALUE);
+		} while (pl.getFactionHandler().exists(newID));
+		Faction created = new Faction(pl, newID, name, name, 0, -1);
+		pl.getFactionHandler().create(created);
+		pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).setFactionID(created.getID());
+		p.sendMessage("§eFaction luotu! Uusi nimi: " + created.getShortName() + ".");
 	}
 }

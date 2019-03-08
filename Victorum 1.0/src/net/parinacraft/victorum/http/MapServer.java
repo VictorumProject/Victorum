@@ -103,9 +103,4 @@ class HTTPRequestHandler extends BukkitRunnable {
 			e.printStackTrace();
 		}
 	}
-
-	@Override
-	public synchronized void cancel() throws IllegalStateException {
-		Thread.
-	}
 }
