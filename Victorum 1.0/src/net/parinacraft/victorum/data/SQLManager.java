@@ -17,6 +17,7 @@ import net.parinacraft.victorum.Opt;
 import net.parinacraft.victorum.Victorum;
 import net.parinacraft.victorum.claim.Claim;
 import net.parinacraft.victorum.claim.Faction;
+import net.parinacraft.victorum.claim.FactionRole;
 
 /**
  * Handles SQL connecting and executing of queries
@@ -67,20 +68,24 @@ public class SQLManager {
 
 	public void createDatabases() {
 		checkConnection();
-		try {
-			Statement stmt = conn.createStatement();
+		try (Statement stmt = conn.createStatement()) {
 			stmt.addBatch(
-					"CREATE TABLE IF NOT EXISTS PlayerData (UUID varchar(36), FactionID int, UNIQUE (UUID))");
+					"CREATE TABLE IF NOT EXISTS PlayerData (UUID VARCHAR(36) PRIMARY KEY NOT NULL, FactionID int NOT NULL, Role TINYINT NOT NULL)");
 			stmt.addBatch(
-					"CREATE TABLE IF NOT EXISTS Claim (ChunkX int(5), ChunkZ int(5), FactionID int, RentExpiration Date)");
-			stmt.addBatch("CREATE TABLE IF NOT EXISTS Faction (FactionID int PRIMARY KEY, Short varchar("
-					+ Opt.MAX_FACTION_NAME_SHORT + ") PRIMARY KEY, Name varchar(" + Opt.MAX_FACTION_NAME_LONG
-					+ "), Value int(30), BoardPosition int, UNIQUE (FactionID, Short))");
+					"CREATE TABLE IF NOT EXISTS Claim (ChunkX int(5), ChunkZ int(5), FactionID int NOT NULL, RentExpiration Date NOT NULL, PRIMARY KEY(ChunkX, ChunkZ))");
+			stmt.addBatch(
+					"CREATE TABLE IF NOT EXISTS Faction (FactionID int PRIMARY KEY NOT NULL AUTO_INCREMENT, Short VARCHAR("
+							+ Opt.MAX_FACTION_NAME_SHORT + ") UNIQUE NOT NULL, Name VARCHAR("
+							+ Opt.MAX_FACTION_NAME_LONG
+							+ ") NOT NULL, Founder VARCHAR(36) NOT NULL, Value int(30))");
+			stmt.addBatch(
+					"CREATE TABLE IF NOT EXISTS Invite (InviteID INT PRIMARY KEY AUTO_INCREMENT, Inviter varchar(36), Invited VARCHAR(36), FactionID INT, FOREIGN KEY (FactionID) REFERENCES Faction(FactionID) ON DELETE CASCADE)");
 			// Create default faction
 			stmt.addBatch(
 					"INSERT IGNORE INTO Faction (FactionID, Short, Name, Value, BoardPosition) VALUES (0, 'VICT', 'Victorum', 0, 0)");
 			stmt.executeBatch();
 		} catch (Exception e) {
+
 			e.printStackTrace();
 		}
 	}
@@ -114,7 +119,8 @@ public class SQLManager {
 				while (rs.next()) {
 					UUID id = UUID.fromString(rs.getString("UUID"));
 					int facID = rs.getInt("FactionID");
-					val.put(id, new PlayerData(pl, id, facID));
+					FactionRole role = FactionRole.valueOf(rs.getInt("FactionRole"));
+					val.put(id, new PlayerData(pl, id, facID, role));
 				}
 			}
 		} catch (Exception e) {
@@ -154,17 +160,25 @@ public class SQLManager {
 		}
 	}
 
-	public void createFaction(Faction fac) {
+	public Faction createFaction(String name, UUID founder) {
 		checkConnection();
 		try (PreparedStatement stmt = conn.prepareStatement(
-				"INSERT INTO Faction (FactionID, Short, Name, Value, BoardPosition) VALUES (?, ?, ?, 0, 0)")) {
-			stmt.setInt(1, fac.getID());
-			stmt.setString(2, fac.getShortName());
-			stmt.setString(3, fac.getLongName());
+				"INSERT INTO Faction (FactionID, Short, Name, Founder, Value, BoardPosition) VALUES (?, ?, ?, 0, 0)",
+				Statement.RETURN_GENERATED_KEYS)) {
+			stmt.setString(1, name);
+			stmt.setString(2, name);
+			stmt.setString(3, founder.toString());
 			stmt.execute();
+
+			try (ResultSet keys = stmt.getGeneratedKeys()) {
+				if (keys.next()) {
+					return new Faction(pl, keys.getInt(1), name, name, 0, 0);
+				}
+			}
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 		}
+		return null;
 	}
 
 	public void removeFaction(int id) {
@@ -232,6 +246,18 @@ public class SQLManager {
 				"UPDATE Faction SET Value = ? WHERE FactionID = ?")) {
 			stmt.setLong(1, value);
 			stmt.setInt(2, factionID);
+			stmt.execute();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	public void setFactionRole(UUID UUID, FactionRole role) {
+		checkConnection();
+		try (PreparedStatement stmt = conn.prepareStatement(
+				"UPDATE PlayerData SET FactionRole = ? WHERE UUID = ?")) {
+			stmt.setInt(1, role.getValue());
+			stmt.setString(2, UUID.toString());
 			stmt.execute();
 		} catch (SQLException e1) {
 			e1.printStackTrace();

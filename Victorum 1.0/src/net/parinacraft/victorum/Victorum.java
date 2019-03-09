@@ -14,6 +14,7 @@ import net.parinacraft.victorum.events.ChatListener;
 import net.parinacraft.victorum.events.ChestOpenListener;
 import net.parinacraft.victorum.events.ClaimInvClickCanceller;
 import net.parinacraft.victorum.events.ConnectionListener;
+import net.parinacraft.victorum.events.MovementListener;
 import net.parinacraft.victorum.http.MapServer;
 
 public class Victorum extends JavaPlugin {
@@ -37,6 +38,7 @@ public class Victorum extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(new ChestOpenListener(this), this);
 		Bukkit.getPluginManager().registerEvents(new ClaimInvClickCanceller(this), this);
 		Bukkit.getPluginManager().registerEvents(new ChatListener(this), this);
+		Bukkit.getPluginManager().registerEvents(new MovementListener(this), this);
 
 		// Prepare global options
 		Opt.load(this);
@@ -68,7 +70,6 @@ public class Victorum extends JavaPlugin {
 		if (economyProvider != null) {
 			economy = economyProvider.getProvider();
 		}
-
 		return (economy != null);
 	}
 

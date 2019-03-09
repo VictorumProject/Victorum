@@ -10,6 +10,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.CreatureType;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 
 import com.google.common.base.Preconditions;
 
@@ -17,6 +18,7 @@ import net.parinacraft.victorum.Opt;
 import net.parinacraft.victorum.Victorum;
 import net.parinacraft.victorum.claim.Claim;
 import net.parinacraft.victorum.claim.Faction;
+import net.parinacraft.victorum.claim.FactionRole;
 
 public class FactionHandler {
 	private final Victorum pl;
@@ -54,7 +56,8 @@ public class FactionHandler {
 								case MOB_SPAWNER: {
 									BlockState bs = b.getState();
 									CreatureSpawner cs = (CreatureSpawner) bs;
-									if (cs.getCreatureType() == CreatureType.fromEntityType(EntityType.IRON_GOLEM)) {
+									if (cs.getCreatureType() == CreatureType.fromEntityType(
+											EntityType.IRON_GOLEM)) {
 
 									}
 								}
@@ -86,11 +89,11 @@ public class FactionHandler {
 		});
 	}
 
-	public void create(Faction fac) {
-		factions.put(fac.getID(), fac);
-		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-			pl.getSqlManager().createFaction(factions.get(fac.getID()));
-		});
+	public Faction create(Player creator, String name) {
+		Faction created = pl.getSqlManager().createFaction(name, creator.getUniqueId());
+		factions.put(created.getID(), created);
+		pl.getPlayerDataHandler().getPlayerData(creator.getUniqueId()).setRole(FactionRole.FOUNDER);
+		return created;
 	}
 
 	public boolean exists(String shortName) {

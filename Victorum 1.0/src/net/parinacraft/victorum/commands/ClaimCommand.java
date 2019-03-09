@@ -3,15 +3,11 @@ package net.parinacraft.victorum.commands;
 import java.util.HashMap;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 
 import net.parinacraft.victorum.Opt;
 import net.parinacraft.victorum.Victorum;
@@ -49,8 +45,10 @@ public class ClaimCommand implements CommandExecutor {
 		} else if (args.length == 1) {
 			if (args[0].equalsIgnoreCase("buy") || args[0].equalsIgnoreCase("claim")) {
 				claim(p, playerFac, chunkX, chunkZ);
+			} else if (args[0].equalsIgnoreCase("unclaim")) {
+
 			} else if (args[0].equalsIgnoreCase("map")) {
-				openMap(p, p.getLocation().getChunk().getX(), p.getLocation().getChunk().getZ());
+				openMap(p, playerFac, chunkX, chunkZ);
 			} else if (args[0].equalsIgnoreCase("create")) {
 				sender.sendMessage("§c/" + lbl + " create <lyhenne>");
 			} else if (args[0].equalsIgnoreCase("leave")) {
@@ -116,26 +114,23 @@ public class ClaimCommand implements CommandExecutor {
 
 	}
 
-	private void openMap(Player p, int centerChunkX, int centerChunkZ) {
-		Inventory inv = Bukkit.createInventory(null, 9 * 7, "§e/f map");
+	public void openMap(Player p, Faction playerFac, int centerChunkX, int centerChunkZ) {
 		// 14 enemy, 4 neutral, 5 friend
-		for (int i = -4; i < 5; i++) {
-			for (int j = -3; j < 4; j++) {
-				int inventoryIndex = 31 + i + j * 9;
+		for (int i = -8; i < 9; i++) {
+			String row = "";
+			for (int j = -25; j < 24; j++) {
 				Claim c = pl.getClaimHandler().getClaim(centerChunkX + i, centerChunkZ + j);
-				int id = c.getFactionID();
-				byte relColor = 5;
-				if (id == 0)
-					inv.setItem(inventoryIndex, new ItemStack(Material.AIR, 1, (byte) 4));
-				else {
-					// TODO: Colour by relations
-					Faction fac = c.getFaction();
-					inv.setItem(inventoryIndex, new ItemStack(Material.STAINED_CLAY, fac
-							.getBoardPosition(), relColor));
-				}
+				if (j == 0 && i == 0)
+					row += "§4X";
+				else if (c.getFactionID() == 0)
+					row += "§7+";
+				else if (c.getFactionID() == playerFac.getID())
+					row += "§a+";
+				else
+					row += "§c+";
 			}
+			p.sendMessage(row);
 		}
-		p.openInventory(inv);
 	}
 
 	private void processFactionCreate(Player p, String arg1) {
@@ -168,12 +163,7 @@ public class ClaimCommand implements CommandExecutor {
 		}
 		// Generate a new ID randomly. If there's more a billion factions, we're
 		// screwd;
-		int newID;
-		do {
-			newID = (int) (Math.random() * Integer.MAX_VALUE);
-		} while (pl.getFactionHandler().exists(newID));
-		Faction created = new Faction(pl, newID, name, name, 0, -1);
-		pl.getFactionHandler().create(created);
+		Faction created = pl.getFactionHandler().create(p, name);
 		pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).setFactionID(created.getID());
 		p.sendMessage("§eFaction luotu! Uusi nimi: " + created.getShortName() + ".");
 	}

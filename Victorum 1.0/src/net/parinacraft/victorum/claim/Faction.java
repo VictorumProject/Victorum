@@ -17,7 +17,8 @@ public class Faction {
 
 	private final Victorum pl;
 
-	public Faction(Victorum pl, int factionID, String shortName, String longName, long value, int boardPosition) {
+	public Faction(Victorum pl, int factionID, String shortName, String longName, long value,
+			int boardPosition) {
 		this.pl = pl;
 		this.shortName = Preconditions.checkNotNull(shortName);
 		this.longName = Preconditions.checkNotNull(longName);
@@ -39,7 +40,7 @@ public class Faction {
 	}
 
 	public Set<UUID> getPlayers() {
-		Set<UUID> players = new HashSet<UUID>();
+		Set<UUID> players = new HashSet<>();
 		Set<PlayerData> data = pl.getPlayerDataHandler().getAllData();
 		for (PlayerData pd : data) {
 			if (pd.getFactionID() == this.factionID)

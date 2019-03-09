@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 
 import net.parinacraft.victorum.Victorum;
+import net.parinacraft.victorum.claim.FactionRole;
 
 public class PlayerDataHandler {
 	private final HashMap<UUID, PlayerData> playerData;
@@ -24,7 +25,7 @@ public class PlayerDataHandler {
 
 	public void checkForExistingData(UUID UUID) {
 		if (!playerData.containsKey(UUID)) {
-			playerData.put(UUID, new PlayerData(pl, UUID, 0));
+			playerData.put(UUID, new PlayerData(pl, UUID, 0, FactionRole.MEMBER));
 
 			// Update database
 			Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
@@ -34,6 +35,6 @@ public class PlayerDataHandler {
 	}
 
 	public Set<PlayerData> getAllData() {
-		return new HashSet<PlayerData>(playerData.values());
+		return new HashSet<>(playerData.values());
 	}
 }
