@@ -25,7 +25,8 @@ public class PlayerDataHandler {
 
 	public void checkForExistingData(UUID UUID) {
 		if (!playerData.containsKey(UUID)) {
-			playerData.put(UUID, new PlayerData(pl, UUID, 0, FactionRole.MEMBER));
+			playerData.put(UUID, new PlayerData(pl, UUID, pl.getFactionHandler().getDefaultFactionID(),
+					FactionRole.MEMBER));
 
 			// Update database
 			Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {

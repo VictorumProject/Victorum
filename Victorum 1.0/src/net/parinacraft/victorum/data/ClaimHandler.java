@@ -22,11 +22,11 @@ public class ClaimHandler {
 	public Claim getClaim(int chunkX, int chunkZ) {
 		// Return default faction with coords if not claimed
 		int id = chunkX << 16 | (chunkZ & 0xFFFF);
-		return claims.getOrDefault(id, new Claim(pl, chunkX, chunkZ, 0));
+		return claims.getOrDefault(id, new Claim(pl, chunkX, chunkZ, pl.getFactionHandler().getDefaultFactionID(), -1));
 	}
 
 	public void create(int chunkX, int chunkZ, int facID) {
-		Claim c = new Claim(pl, chunkX, chunkZ, facID);
+		Claim c = new Claim(pl, chunkX, chunkZ, facID, System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 30);
 		claims.put(c.getID(), c);
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
 			pl.getSqlManager().createClaim(c);
@@ -55,7 +55,7 @@ public class ClaimHandler {
 	}
 
 	public Set<Claim> getAllClaims(int facID) {
-		Set<Claim> claims = new HashSet<Claim>();
+		Set<Claim> claims = new HashSet<>();
 		for (Claim claim : this.claims.values()) {
 			if (claim.getFactionID() == facID)
 				claims.add(claim);

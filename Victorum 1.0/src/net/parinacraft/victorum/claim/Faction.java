@@ -11,20 +11,22 @@ import net.parinacraft.victorum.data.PlayerData;
 
 public class Faction {
 	private final int factionID;
-	private int boardPosition;
 	private long value;
 	private String shortName, longName;
+	private final UUID founder;
+	private long leaderThreshold;
 
 	private final Victorum pl;
 
-	public Faction(Victorum pl, int factionID, String shortName, String longName, long value,
-			int boardPosition) {
+	public Faction(Victorum pl, int factionID, String shortName, String longName, UUID founder, long value,
+			long leaderThreshold) {
 		this.pl = pl;
+		this.factionID = factionID;
 		this.shortName = Preconditions.checkNotNull(shortName);
 		this.longName = Preconditions.checkNotNull(longName);
-		this.factionID = factionID;
+		this.founder = Preconditions.checkNotNull(founder);
 		this.value = value;
-		this.boardPosition = boardPosition;
+		this.leaderThreshold = leaderThreshold;
 	}
 
 	public int getID() {
@@ -39,6 +41,18 @@ public class Faction {
 		return shortName;
 	}
 
+	public UUID getFounder() {
+		return founder;
+	}
+
+	public long getValue() {
+		return value;
+	}
+
+	public void setValue(long value) {
+		this.value = value;
+	}
+
 	public Set<UUID> getPlayers() {
 		Set<UUID> players = new HashSet<>();
 		Set<PlayerData> data = pl.getPlayerDataHandler().getAllData();
@@ -49,15 +63,8 @@ public class Faction {
 		return players;
 	}
 
-	public long getValue() {
-		return value;
+	public long getLeaderThreshold() {
+		return leaderThreshold;
 	}
 
-	public int getBoardPosition() {
-		return boardPosition;
-	}
-
-	public void setValue(long value) {
-		this.value = value;
-	}
 }

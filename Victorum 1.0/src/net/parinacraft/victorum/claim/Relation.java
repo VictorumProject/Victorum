@@ -3,8 +3,7 @@ package net.parinacraft.victorum.claim;
 import org.bukkit.ChatColor;
 
 public enum Relation {
-	NEUTRAL(ChatColor.WHITE), ALLY(ChatColor.DARK_PURPLE), ENEMY(ChatColor.RED), OWN(
-			ChatColor.GREEN);
+	NEUTRAL(ChatColor.WHITE), ALLY(ChatColor.DARK_PURPLE), ENEMY(ChatColor.RED), OWN(ChatColor.GREEN);
 
 	private final ChatColor color;
 

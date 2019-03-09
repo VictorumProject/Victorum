@@ -6,6 +6,7 @@ import org.bukkit.World;
 
 public class Opt {
 
+	public static long DEFAULT_LEADER_THRESHOLD = 0;
 	public static World GAME_WORLD;
 	public static int MAX_FACTION_NAME_SHORT;
 	public static int MAX_FACTION_NAME_LONG;
@@ -15,6 +16,7 @@ public class Opt {
 		GAME_WORLD = pl.getServer().getWorld("world");
 		MAX_FACTION_NAME_SHORT = 4;
 		MAX_FACTION_NAME_LONG = 50;
+		DEFAULT_LEADER_THRESHOLD = 5000;
 
 		ALLOWED_FACTION_NAME_CHARS = new HashSet<>();
 		String values = pl.getConfig().getString("allowed-faction-name-letters");

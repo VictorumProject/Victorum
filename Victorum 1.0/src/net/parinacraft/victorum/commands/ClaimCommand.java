@@ -3,6 +3,7 @@ package net.parinacraft.victorum.commands;
 import java.util.HashMap;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -31,10 +32,8 @@ public class ClaimCommand implements CommandExecutor {
 			return true;
 		}
 		Player p = (Player) sender;
-		final int chunkX = p.getLocation().getChunk().getX(), chunkZ = p.getLocation().getChunk()
-				.getZ();
-		final Faction playerFac = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId())
-				.getFaction();
+		final int chunkX = p.getLocation().getChunk().getX(), chunkZ = p.getLocation().getChunk().getZ();
+		final Faction playerFac = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFaction();
 		if (args.length == 0) {
 			sender.sendMessage("§eVictorum v" + pl.getDescription().getVersion());
 			sender.sendMessage("§e    /" + lbl + " create");
@@ -46,11 +45,13 @@ public class ClaimCommand implements CommandExecutor {
 			if (args[0].equalsIgnoreCase("buy") || args[0].equalsIgnoreCase("claim")) {
 				claim(p, playerFac, chunkX, chunkZ);
 			} else if (args[0].equalsIgnoreCase("unclaim")) {
-
+				processUnclaiming(p, playerFac, chunkX, chunkZ);
 			} else if (args[0].equalsIgnoreCase("map")) {
 				openMap(p, playerFac, chunkX, chunkZ);
+			} else if (args[0].equalsIgnoreCase("list")) {
+				listFactions(p);
 			} else if (args[0].equalsIgnoreCase("create")) {
-				sender.sendMessage("§c/" + lbl + " create <lyhenne>");
+				sender.sendMessage("§e/" + lbl + " create <lyhenne>");
 			} else if (args[0].equalsIgnoreCase("leave")) {
 				processFactionLeave(p, playerFac);
 			} else {
@@ -66,8 +67,28 @@ public class ClaimCommand implements CommandExecutor {
 		return true;
 	}
 
+	private void claim(Player claimer, Faction fac, int chunkX, int chunkZ) {
+		if (pl.getPlayerDataHandler().getPlayerData(claimer.getUniqueId()).getFactionID() == pl.getFactionHandler()
+				.getDefaultFactionID()) {
+			// Not in a faction
+			claimer.sendMessage("§eEt ole factionissa.");
+			claimer.sendMessage("§eVoit luoda factionin komennolla /f create <lyhenne>");
+			return;
+		}
+		int claimFaction = pl.getClaimHandler().getClaim(chunkX, chunkZ).getFactionID();
+		if (claimFaction != pl.getFactionHandler().getDefaultFactionID()) {
+			// TODO: Overclaiming
+			claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " on jo varattu!");
+			return;
+		}
+
+		pl.getClaimHandler().create(chunkX, chunkZ, fac.getID());
+		claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " claimattu!");
+
+	}
+
 	private void claimRadius(Player p, Faction fac, Chunk ch, String arg0, String arg1) {
-		if (pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID() == 0) {
+		if (fac.getID() == pl.getFactionHandler().getDefaultFactionID()) {
 			// Not in a faction
 			p.sendMessage("§eEt ole factionissa.");
 			p.sendMessage("§eVoit luoda factionin komennolla /f create <lyhenne>");
@@ -90,28 +111,18 @@ public class ClaimCommand implements CommandExecutor {
 				}
 			}
 		} catch (Exception e) {
-			p.sendMessage("§c/f " + arg0 + " <säde>");
+			p.sendMessage("§e/f " + arg0 + " <säde>");
 		}
 
 	}
 
-	private void claim(Player claimer, Faction fac, int chunkX, int chunkZ) {
-		if (pl.getPlayerDataHandler().getPlayerData(claimer.getUniqueId()).getFactionID() == 0) {
-			// Not in a faction
-			claimer.sendMessage("§eEt ole factionissa.");
-			claimer.sendMessage("§eVoit luoda factionin komennolla /f create <lyhenne>");
-			return;
-		}
-		int claimFaction = pl.getClaimHandler().getClaim(chunkX, chunkZ).getFactionID();
-		if (claimFaction != 0) {
-			// TODO: Overclaiming
-			claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " on jo varattu!");
-			return;
-		}
-
-		pl.getClaimHandler().create(chunkX, chunkZ, fac.getID());
-		claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " claimattu!");
-
+	private void processUnclaiming(Player p, Faction playerFac, int chunkX, int chunkZ) {
+//		PlayerData pd = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
+//		if (pd.getRole() != FactionRole.LEADER) {
+//			p.sendMessage("§eEt ole factisi johtaja. Raja johtajuuteen on " + playerFac.getLeaderThreshold());
+//			return;
+//		}
+		pl.getClaimHandler().unclaim(pl.getClaimHandler().getClaim(chunkX, chunkZ));
 	}
 
 	public void openMap(Player p, Faction playerFac, int centerChunkX, int centerChunkZ) {
@@ -122,7 +133,7 @@ public class ClaimCommand implements CommandExecutor {
 				Claim c = pl.getClaimHandler().getClaim(centerChunkX + i, centerChunkZ + j);
 				if (j == 0 && i == 0)
 					row += "§4X";
-				else if (c.getFactionID() == 0)
+				else if (c.getFactionID() == pl.getFactionHandler().getDefaultFactionID())
 					row += "§7+";
 				else if (c.getFactionID() == playerFac.getID())
 					row += "§a+";
@@ -131,6 +142,10 @@ public class ClaimCommand implements CommandExecutor {
 			}
 			p.sendMessage(row);
 		}
+	}
+
+	private void listFactions(Player p) {
+		p.sendMessage("§eTotal ");
 	}
 
 	private void processFactionCreate(Player p, String arg1) {
@@ -148,9 +163,8 @@ public class ClaimCommand implements CommandExecutor {
 			return;
 		}
 
-		Faction current = pl.getFactionHandler().getFaction(pl.getPlayerDataHandler().getPlayerData(
-				p.getUniqueId()).getFactionID());
-		if (current.getID() != 0) {
+		Faction current = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFaction();
+		if (current.getID() != pl.getFactionHandler().getDefaultFactionID()) {
 			// Already in a fac
 			p.sendMessage("§eFactionisi lyhenne on " + current.getShortName());
 			p.sendMessage("§eVoit jättää factionisi komennolla /faction leave.");
@@ -166,37 +180,38 @@ public class ClaimCommand implements CommandExecutor {
 		Faction created = pl.getFactionHandler().create(p, name);
 		pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).setFactionID(created.getID());
 		p.sendMessage("§eFaction luotu! Uusi nimi: " + created.getShortName() + ".");
+		Bukkit.broadcastMessage(p.getDisplayName() + " §eloi factionin " + created.getShortName());
 	}
 
 	private void processFactionLeave(Player p, Faction playerFac) {
 		PlayerData data = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
 		int oldFactionID = data.getFactionID();
-		if (oldFactionID == 0) {
+		if (oldFactionID == pl.getFactionHandler().getDefaultFactionID()) {
 			p.sendMessage("§eEt ole missään factionissa. /f create <lyhenne>");
 			return;
 		}
 		if (confirmLeave.containsKey(p.getUniqueId())) {
 			long lastTime = confirmLeave.get(p.getUniqueId());
 			if (lastTime + 10000 < System.currentTimeMillis()) {
-				p.sendMessage(
-						"§eJos haluat jättää factionisi, tee /f leave uudelleen 10 sekunnin sisällä.");
+				p.sendMessage("§eJos haluat jättää factionisi, tee /f leave uudelleen 10 sekunnin sisällä.");
 				confirmLeave.put(p.getUniqueId(), System.currentTimeMillis());
 				return;
 			}
 		} else {
 			confirmLeave.put(p.getUniqueId(), System.currentTimeMillis());
-			p.sendMessage(
-					"§eJos haluat jättää factionisi, tee /f leave uudelleen 10 sekunnin sisällä.");
+			p.sendMessage("§eJos haluat jättää factionisi, tee /f leave uudelleen 10 sekunnin sisällä.");
 			return;
 		}
 		confirmLeave.remove(p.getUniqueId());
 
 		p.sendMessage("§eLähdit factionista " + data.getFaction().getLongName() + ".");
-		data.setFactionID(0);
+		data.setFactionID(pl.getFactionHandler().getDefaultFactionID());
 
 		if (pl.getFactionHandler().getFaction(oldFactionID).getPlayers().size() == 0) {
 			pl.getFactionHandler().delete(oldFactionID);
 			p.sendMessage("§eOlit viimeinen factionissasi, joten se lopetettiin.");
 		}
+
+		Bukkit.broadcastMessage("§e");
 	}
 }

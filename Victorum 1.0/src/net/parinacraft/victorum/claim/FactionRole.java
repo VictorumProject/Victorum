@@ -6,7 +6,7 @@ public enum FactionRole {
 	private final int val;
 
 	private FactionRole(int val) {
-		this.val = 0;
+		this.val = val;
 	}
 
 	public int getValue() {
