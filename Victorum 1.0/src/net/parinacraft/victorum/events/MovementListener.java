@@ -1,5 +1,6 @@
 package net.parinacraft.victorum.events;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -8,6 +9,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 
 import net.parinacraft.victorum.Victorum;
 import net.parinacraft.victorum.claim.Claim;
+import net.parinacraft.victorum.claim.Faction;
 
 public class MovementListener implements Listener {
 
@@ -20,8 +22,7 @@ public class MovementListener implements Listener {
 	@EventHandler
 	public void onDisplayNewTerratory(PlayerMoveEvent e) {
 		Player p = e.getPlayer();
-		// Faction fac =
-		// pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFaction();
+		Faction fac = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFaction();
 		Chunk toCh = e.getTo().getChunk();
 		Chunk fromCh = e.getFrom().getChunk();
 		Claim toClaim = pl.getClaimHandler().getClaim(toCh.getX(), toCh.getZ());
@@ -30,6 +31,8 @@ public class MovementListener implements Listener {
 		if (fromClaim.getFactionID() == toClaim.getFactionID())
 			return;
 
-		p.sendMessage("§e~ " + toClaim.getFaction().getLongName());
+		ChatColor relColor = pl.getRelationHandler().getRelation(fac.getID(), toClaim.getFactionID()).getColor();
+		p.sendMessage(relColor + "§l-- " + toClaim.getFaction().getShortName() + " - " + toClaim.getFaction()
+				.getLongName());
 	}
 }

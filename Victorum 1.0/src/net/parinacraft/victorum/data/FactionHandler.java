@@ -1,5 +1,6 @@
 package net.parinacraft.victorum.data;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 import org.bukkit.Bukkit;
@@ -20,9 +21,6 @@ public class FactionHandler {
 		this.pl = pl;
 		this.factions = pl.getSqlManager().loadFactions();
 		this.defaultFactionID = defaultFactionID;
-
-		// Asynchronously update faction value and leaderboard placement
-
 	}
 
 	public Faction getFaction(int id) {
@@ -58,5 +56,17 @@ public class FactionHandler {
 
 	public int getDefaultFactionID() {
 		return defaultFactionID;
+	}
+
+	public Collection<Faction> getAllFactions() {
+		return factions.values();
+	}
+
+	public Faction getFactionWithName(String name) {
+		for (Faction fac : factions.values()) {
+			if (fac.getShortName().contentEquals(name))
+				return fac;
+		}
+		return null;
 	}
 }

@@ -78,7 +78,7 @@ public class SQLManager {
 					"CREATE TABLE IF NOT EXISTS Faction (FactionID int PRIMARY KEY NOT NULL AUTO_INCREMENT, Short VARCHAR("
 							+ Opt.MAX_FACTION_NAME_SHORT + ") UNIQUE NOT NULL, Name VARCHAR("
 							+ Opt.MAX_FACTION_NAME_LONG
-							+ ") NOT NULL, Founder VARCHAR(36) NOT NULL, Value BIGINT, LeaderThreshold BIGINT) AUTO_INCREMENT = "
+							+ ") NOT NULL, Founder VARCHAR(36) NOT NULL, Value BIGINT, LeaderThreshold BIGINT NOT NULL) AUTO_INCREMENT = "
 							+ defaultFactionID + "");
 			stmt.addBatch(
 					"CREATE TABLE IF NOT EXISTS Invite (InviteID INT PRIMARY KEY AUTO_INCREMENT, Inviter varchar(36), Invited VARCHAR(36), FactionID INT, FOREIGN KEY (FactionID) REFERENCES Faction(FactionID) ON DELETE CASCADE)");

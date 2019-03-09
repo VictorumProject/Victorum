@@ -22,6 +22,10 @@ public class ClaimBuildProtection implements Listener {
 		Player p = e.getPlayer();
 		Chunk ch = e.getBlock().getChunk();
 		Claim claim = pl.getClaimHandler().getClaim(ch.getX(), ch.getZ());
+
+		if (claim.getFactionID() == pl.getFactionHandler().getDefaultFactionID())
+			return;
+
 		int playerFactionID = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID();
 		if (claim.getFactionID() != playerFactionID) {
 			p.sendMessage("§eTämän alueen omistaa " + claim.getFaction().getLongName() + ".");
@@ -35,6 +39,10 @@ public class ClaimBuildProtection implements Listener {
 		Player p = e.getPlayer();
 		Chunk ch = e.getBlock().getChunk();
 		Claim claim = pl.getClaimHandler().getClaim(ch.getX(), ch.getZ());
+
+		if (claim.getFactionID() == pl.getFactionHandler().getDefaultFactionID())
+			return;
+
 		int playerFactionID = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID();
 		if (claim.getFactionID() != playerFactionID) {
 			p.sendMessage("§eTämän alueen omistaa " + claim.getFaction().getLongName() + ".");

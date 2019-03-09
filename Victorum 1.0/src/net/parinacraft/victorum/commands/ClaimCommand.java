@@ -1,10 +1,14 @@
 package net.parinacraft.victorum.commands;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,6 +18,7 @@ import net.parinacraft.victorum.Opt;
 import net.parinacraft.victorum.Victorum;
 import net.parinacraft.victorum.claim.Claim;
 import net.parinacraft.victorum.claim.Faction;
+import net.parinacraft.victorum.claim.FactionRole;
 import net.parinacraft.victorum.data.PlayerData;
 
 public class ClaimCommand implements CommandExecutor {
@@ -37,10 +42,12 @@ public class ClaimCommand implements CommandExecutor {
 		if (args.length == 0) {
 			sender.sendMessage("§eVictorum v" + pl.getDescription().getVersion());
 			sender.sendMessage("§e    /" + lbl + " create");
-			sender.sendMessage("§e    /" + lbl + " claim|buy");
+			sender.sendMessage("§e    /" + lbl + " claim/buy");
+			sender.sendMessage("§e    /" + lbl + " who/show");
 			sender.sendMessage("§e    /" + lbl + " invite");
 			sender.sendMessage("§e    /" + lbl + " map");
 			sender.sendMessage("§e    /" + lbl + " leave");
+
 		} else if (args.length == 1) {
 			if (args[0].equalsIgnoreCase("buy") || args[0].equalsIgnoreCase("claim")) {
 				claim(p, playerFac, chunkX, chunkZ);
@@ -49,11 +56,13 @@ public class ClaimCommand implements CommandExecutor {
 			} else if (args[0].equalsIgnoreCase("map")) {
 				openMap(p, playerFac, chunkX, chunkZ);
 			} else if (args[0].equalsIgnoreCase("list")) {
-				listFactions(p);
+				listFactions(p, 1);
 			} else if (args[0].equalsIgnoreCase("create")) {
 				sender.sendMessage("§e/" + lbl + " create <lyhenne>");
 			} else if (args[0].equalsIgnoreCase("leave")) {
 				processFactionLeave(p, playerFac);
+			} else if (args[0].equalsIgnoreCase("show") || args[0].equalsIgnoreCase("who")) {
+				showFaction(p, playerFac);
 			} else {
 				sender.sendMessage("§eKomentoa ei prosessoitu.");
 			}
@@ -62,9 +71,23 @@ public class ClaimCommand implements CommandExecutor {
 				claimRadius(p, playerFac, p.getLocation().getChunk(), args[0], args[1]);
 			} else if (args[0].equalsIgnoreCase("create")) {
 				processFactionCreate(p, args[1]);
+			} else if (args[0].equalsIgnoreCase("list")) {
+				try {
+					listFactions(p, Integer.parseInt(args[1]));
+				} catch (Exception e) {
+					sender.sendMessage("§e/f list <sivu>");
+				}
+			} else if (args[0].equalsIgnoreCase("show") || args[0].equalsIgnoreCase("who")) {
+				String name = args[1];
+				if (pl.getFactionHandler().exists(name)) {
+					showFaction(p, pl.getFactionHandler().getFactionWithName(name));
+					return true;
+				}
+
 			}
 		}
 		return true;
+
 	}
 
 	private void claim(Player claimer, Faction fac, int chunkX, int chunkZ) {
@@ -117,35 +140,93 @@ public class ClaimCommand implements CommandExecutor {
 	}
 
 	private void processUnclaiming(Player p, Faction playerFac, int chunkX, int chunkZ) {
-//		PlayerData pd = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
-//		if (pd.getRole() != FactionRole.LEADER) {
-//			p.sendMessage("§eEt ole factisi johtaja. Raja johtajuuteen on " + playerFac.getLeaderThreshold());
-//			return;
-//		}
+		// PlayerData pd = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
+		// if (pd.getRole() != FactionRole.LEADER) {
+		// p.sendMessage("§eEt ole factisi johtaja. Raja johtajuuteen on " +
+		// playerFac.getLeaderThreshold());
+		// return;
+		// }
 		pl.getClaimHandler().unclaim(pl.getClaimHandler().getClaim(chunkX, chunkZ));
 	}
 
-	public void openMap(Player p, Faction playerFac, int centerChunkX, int centerChunkZ) {
+	private void openMap(Player p, Faction playerFac, int centerChunkX, int centerChunkZ) {
+		HashMap<Integer, Character> factionSigns = new HashMap<>();
+		String possibilities = "+-/&$?ABCDEFGHIJKLMNOPQRSTUVXYZÅÄÖ";
+		int signIndex = 0;
+
 		// 14 enemy, 4 neutral, 5 friend
+		String rows = "";
 		for (int i = -8; i < 9; i++) {
-			String row = "";
 			for (int j = -25; j < 24; j++) {
-				Claim c = pl.getClaimHandler().getClaim(centerChunkX + i, centerChunkZ + j);
+				Claim claim = pl.getClaimHandler().getClaim(centerChunkX + j, centerChunkZ + i);
 				if (j == 0 && i == 0)
-					row += "§4X";
-				else if (c.getFactionID() == pl.getFactionHandler().getDefaultFactionID())
-					row += "§7+";
-				else if (c.getFactionID() == playerFac.getID())
-					row += "§a+";
-				else
-					row += "§c+";
+					rows += "§2X";
+				Character c;
+				if (!factionSigns.containsKey(claim.getFactionID()))
+					factionSigns.put(claim.getFactionID(), possibilities.charAt(signIndex++));
+				c = factionSigns.get(claim.getFactionID());
+
+				ChatColor color = pl.getRelationHandler().getRelation(playerFac.getID(), claim.getFactionID())
+						.getColor();
+				rows += color.toString() + c.toString();
 			}
-			p.sendMessage(row);
+			rows += "\n";
+		}
+		p.sendMessage("");
+		p.sendMessage(rows);
+	}
+
+	private void listFactions(Player p, int page) {
+		ArrayList<Faction> factionList = new ArrayList<>(pl.getFactionHandler().getAllFactions());
+		Faction vict = null;
+		for (Faction faction : factionList)
+			if (faction.getID() == pl.getFactionHandler().getDefaultFactionID()) {
+				vict = faction;
+				break;
+			}
+		factionList.remove(vict);
+		factionList.sort(new Comparator<Faction>() {
+			@Override
+			public int compare(Faction f1, Faction f2) {
+				int dValue = (int) (f1.getValue() - f2.getValue());
+				if (dValue == 0)
+					return f1.getID() - f2.getID();
+				return dValue;
+			}
+		});
+		PlayerData pd = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
+		p.sendMessage("§eListing " + page + "/" + (factionList.size() / 10 + 1) + " page of factions...");
+		for (int i = page; i < Math.min((page + 1) * 10, factionList.size()); i++) {
+			Faction fac = factionList.get(i);
+			ChatColor color = pl.getRelationHandler().getRelation(pd.getFactionID(), factionList.get(i).getID())
+					.getColor();
+			p.sendMessage("  " + color + " " + fac.getShortName() + ": " + fac.getPlayers().size());
 		}
 	}
 
-	private void listFactions(Player p) {
-		p.sendMessage("§eTotal ");
+	private void showFaction(Player p, Faction fac) {
+		int playerFacID = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID();
+		ChatColor color = pl.getRelationHandler().getRelation(fac.getID(), playerFacID).getColor();
+		String playerList = "";
+		for (UUID uuid : fac.getPlayers()) {
+			FactionRole role = pl.getPlayerDataHandler().getPlayerData(uuid).getRole();
+			String roleStr = (role == FactionRole.LEADER ? "*" : role == FactionRole.FOUNDER ? "**" : "+");
+			OfflinePlayer op = Bukkit.getOfflinePlayer(uuid);
+			if (op != null)
+				playerList += color + roleStr + op.getName() + "§e, ";
+			else
+				playerList += uuid.toString();
+			playerList = playerList.substring(0, playerList.length() - 2);
+		}
+		OfflinePlayer founder = Bukkit.getOfflinePlayer(fac.getFounder());
+		String founderStr = (founder == null ? fac.getFounder().toString() : founder.getName());
+		p.sendMessage("");
+		p.sendMessage("              §eFaction " + color + fac.getShortName());
+		p.sendMessage("§eKoko nimi: " + fac.getLongName());
+		p.sendMessage("§ePerustaja: " + founderStr);
+		p.sendMessage("§eJäsenet: " + playerList);
+		p.sendMessage("§eAlueet: " + pl.getClaimHandler().getAllClaims(fac.getID()).size());
+		p.sendMessage("§eArvo: " + fac.getValue());
 	}
 
 	private void processFactionCreate(Player p, String arg1) {
@@ -186,6 +267,7 @@ public class ClaimCommand implements CommandExecutor {
 	private void processFactionLeave(Player p, Faction playerFac) {
 		PlayerData data = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
 		int oldFactionID = data.getFactionID();
+		String oldFactionName = data.getFaction().getLongName();
 		if (oldFactionID == pl.getFactionHandler().getDefaultFactionID()) {
 			p.sendMessage("§eEt ole missään factionissa. /f create <lyhenne>");
 			return;
@@ -212,6 +294,6 @@ public class ClaimCommand implements CommandExecutor {
 			p.sendMessage("§eOlit viimeinen factionissasi, joten se lopetettiin.");
 		}
 
-		Bukkit.broadcastMessage("§e");
+		Bukkit.broadcastMessage(p.getDisplayName() + " lopetti factionin " + oldFactionName);
 	}
 }

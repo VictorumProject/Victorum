@@ -1,5 +1,6 @@
 package net.parinacraft.victorum.events;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
@@ -23,6 +24,8 @@ public class ConnectionListener implements Listener {
 	@EventHandler
 	public void onJoin(PlayerJoinEvent e) {
 		e.setJoinMessage("§8[§a+§8] §e" + e.getPlayer().getName());
+		Player p = e.getPlayer();
+		p.setDisplayName("§e" + p.getName());
 	}
 
 	@EventHandler
