@@ -15,12 +15,10 @@ import net.parinacraft.victorum.claim.FactionRole;
 public class FactionHandler {
 	private final Victorum pl;
 	private final HashMap<Integer, Faction> factions;
-	private final int defaultFactionID;
 
-	public FactionHandler(Victorum pl, int defaultFactionID) {
+	public FactionHandler(Victorum pl) {
 		this.pl = pl;
 		this.factions = pl.getSqlManager().loadFactions();
-		this.defaultFactionID = defaultFactionID;
 	}
 
 	public Faction getFaction(int id) {
@@ -38,7 +36,7 @@ public class FactionHandler {
 	public Faction create(Player creator, String name) {
 		Faction created = pl.getSqlManager().createFaction(name, creator.getUniqueId());
 		factions.put(created.getID(), created);
-		pl.getPlayerDataHandler().getPlayerData(creator.getUniqueId()).setRole(FactionRole.FOUNDER);
+		pl.getPlayerDataHandler().getPlayerData(creator.getUniqueId()).setRole(FactionRole.LEADER);
 		return created;
 	}
 
@@ -54,14 +52,13 @@ public class FactionHandler {
 		return factions.containsKey(newID);
 	}
 
-	public int getDefaultFactionID() {
-		return defaultFactionID;
-	}
-
 	public Collection<Faction> getAllFactions() {
 		return factions.values();
 	}
 
+	/**
+	 * @return null if faction doesn't exist
+	 */
 	public Faction getFactionWithName(String name) {
 		for (Faction fac : factions.values()) {
 			if (fac.getShortName().contentEquals(name))

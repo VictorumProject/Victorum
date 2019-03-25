@@ -4,8 +4,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+
 import com.google.common.base.Preconditions;
 
+import net.parinacraft.victorum.Opt;
 import net.parinacraft.victorum.Victorum;
 import net.parinacraft.victorum.data.PlayerData;
 
@@ -15,11 +19,12 @@ public class Faction {
 	private String shortName, longName;
 	private final UUID founder;
 	private long leaderThreshold;
+	private Location home;
 
 	private final Victorum pl;
 
 	public Faction(Victorum pl, int factionID, String shortName, String longName, UUID founder, long value,
-			long leaderThreshold) {
+			long leaderThreshold, Location home) {
 		this.pl = pl;
 		this.factionID = factionID;
 		this.shortName = Preconditions.checkNotNull(shortName);
@@ -27,6 +32,7 @@ public class Faction {
 		this.founder = Preconditions.checkNotNull(founder);
 		this.value = value;
 		this.leaderThreshold = leaderThreshold;
+		this.home = home;
 	}
 
 	public int getID() {
@@ -46,7 +52,7 @@ public class Faction {
 	}
 
 	public long getValue() {
-		return value;
+		return value + getBalance();
 	}
 
 	public void setValue(long value) {
@@ -65,6 +71,57 @@ public class Faction {
 
 	public long getLeaderThreshold() {
 		return leaderThreshold;
+	}
+
+	public Location getHome() {
+		return home;
+	}
+
+	public void setHome(Location home) {
+		this.home = home;
+		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
+			pl.getSqlManager().setHome(this, home);
+		});
+	}
+
+	public long getBalance() {
+		long bal = 0;
+		for (UUID id : this.getPlayers()) {
+			PlayerData pd = pl.getPlayerDataHandler().getPlayerData(id);
+			bal += pd.getBalanceForFaction();
+		}
+		return bal;
+	}
+
+	public void withdraw(long amount) {
+		double amountPerBalance = (double) amount / (double) this.getBalance();
+		for (UUID id : getPlayers()) {
+			PlayerData pd = pl.getPlayerDataHandler().getPlayerData(id);
+			long sub = (long) (pd.getBalanceForFaction() * amountPerBalance);
+			pd.subtractBalance(sub);
+		}
+	}
+
+	public boolean isDefaultFaction() {
+		return this.factionID == Opt.DEFAULT_FACTION_ID;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
+			pl.getSqlManager().setShortName(this.getID(), shortName);
+		});
+	}
+
+	public void setLongName(String longName) {
+		this.longName = longName;
+		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
+			pl.getSqlManager().setLongName(this.getID(), longName);
+		});
+	}
+
+	public Set<Claim> getClaims() {
+		return pl.getClaimHandler().getAllClaims(this.factionID);
 	}
 
 }

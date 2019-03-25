@@ -41,4 +41,10 @@ public class Claim {
 	public long getExpirationDate() {
 		return expirationDate;
 	}
+
+	public static long getWeeklyRent(int chunkX, int chunkZ) {
+		double distance = Math.sqrt(chunkX * chunkX + chunkZ * chunkZ);
+		long hourRent = (long) (25 + Math.pow(distance, 1.2));
+		return hourRent * 7 * 24;
+	}
 }

@@ -1,7 +1,7 @@
 package net.parinacraft.victorum.claim;
 
 public enum FactionRole {
-	FOUNDER(1), LEADER(2), MEMBER(3);
+	LEADER(2), MEMBER(3);
 
 	private final int val;
 

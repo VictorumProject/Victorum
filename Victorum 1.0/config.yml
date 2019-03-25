@@ -4,4 +4,5 @@ mysql:
   user: user
   password: password
 map-server-port: 3539
-allowed-faction-name-letters: ABCDEFGHIJKLMNOPQRSTUWVXYZÅÄÖ
+allowed-faction-name-letters: ABCDEFGHIJKLMNOPQRSTUWVXYZï¿½ï¿½ï¿½
+default-faction-id: 1
