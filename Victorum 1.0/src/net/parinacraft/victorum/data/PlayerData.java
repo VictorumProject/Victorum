@@ -3,6 +3,7 @@ package net.parinacraft.victorum.data;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 import net.parinacraft.victorum.Opt;
 import net.parinacraft.victorum.Victorum;
@@ -97,6 +98,13 @@ public class PlayerData {
 
 	public String getLastSeenName() {
 		return lastSeenName;
+	}
+
+	/**
+	 * @return null if player isn't online.
+	 */
+	public Player getPlayer() {
+		return Bukkit.getPlayer(this.UUID);
 	}
 
 }

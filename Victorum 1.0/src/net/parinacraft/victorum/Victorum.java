@@ -3,8 +3,8 @@ package net.parinacraft.victorum;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import net.parinacraft.victorum.commands.BalanceCommand;
 import net.parinacraft.victorum.commands.ClaimCommand;
-import net.parinacraft.victorum.data.BalanceCommand;
 import net.parinacraft.victorum.data.ClaimHandler;
 import net.parinacraft.victorum.data.FactionHandler;
 import net.parinacraft.victorum.data.InviteHandler;

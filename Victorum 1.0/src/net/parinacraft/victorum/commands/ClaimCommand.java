@@ -496,6 +496,7 @@ public class ClaimCommand implements CommandExecutor {
 		caller.sendMessage("§eJäsenet (" + players.size() + "): " + color + playerList.substring(2, playerList.length()
 				- 2));
 		caller.sendMessage("§eAlueet: " + pl.getClaimHandler().getAllClaims(fac.getID()).size());
+		caller.sendMessage("§eRahaa: $" + fac.getBalance());
 		caller.sendMessage("§eArvo: $" + fac.getValue());
 	}
 

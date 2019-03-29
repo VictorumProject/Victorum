@@ -1,4 +1,4 @@
-package net.parinacraft.victorum.data;
+package net.parinacraft.victorum.commands;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -6,6 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import net.parinacraft.victorum.Victorum;
+import net.parinacraft.victorum.data.PlayerData;
 
 public class BalanceCommand implements CommandExecutor {
 	private final Victorum pl;
