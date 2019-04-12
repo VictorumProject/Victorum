@@ -106,6 +106,6 @@ class HTTPRequestHandler extends BukkitRunnable {
 
 	@Override
 	public synchronized void cancel() throws IllegalStateException {
-		Thread.
+		
 	}
 }

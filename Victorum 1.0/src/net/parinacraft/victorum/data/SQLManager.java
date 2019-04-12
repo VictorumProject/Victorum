@@ -67,11 +67,11 @@ public class SQLManager {
 		checkConnection();
 		try {
 			Statement stmt = conn.createStatement();
-			stmt.addBatch("CREATE TABLE IF NOT EXISTS PlayerData (UUID varchar(36), FactionID int, UNIQUE (UUID))");
+			stmt.addBatch("CREATE TABLE IF NOT EXISTS PlayerData (UUID varchar(36), FactionID int, PRIMARY KEY (UUID))");
 			stmt.addBatch("CREATE TABLE IF NOT EXISTS Claim (ChunkX int(5), ChunkZ int(5), FactionID int)");
 			stmt.addBatch("CREATE TABLE IF NOT EXISTS Faction (FactionID int, Short varchar("
 					+ Opt.MAX_FACTION_NAME_SHORT + "), Name varchar(" + Opt.MAX_FACTION_NAME_LONG
-					+ "), Value int(30), BoardPosition int, UNIQUE (FactionID, Short))");
+					+ "), Value int(30), BoardPosition int, PRIMARY KEY (FactionID, Short))");
 			// Create default faction
 			stmt.addBatch(
 					"INSERT IGNORE INTO Faction (FactionID, Short, Name, Value, BoardPosition) VALUES (0, 'VICT', 'Victorum', 0, 0)");
