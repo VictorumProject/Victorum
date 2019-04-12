@@ -7,10 +7,10 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import net.parinacraft.victorum.Victorum;
 
 public class ClaimInvClickCanceller implements Listener {
-//	private final Victorum pl;
+	// private final Victorum pl;
 
 	public ClaimInvClickCanceller(Victorum pl) {
-//		this.pl = pl;
+		// this.pl = pl;
 	}
 
 	@EventHandler

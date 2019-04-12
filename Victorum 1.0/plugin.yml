@@ -3,8 +3,17 @@ name: Victorum
 version: 1.0.0
 author: Juubes
 webite: https://parinacraft.net
+load: STARTUP
+depend:
+- Vault
+load-before:
+- Vault
 commands:
   claim:
     aliases:
     - faction
     - f
+  balance:
+    aliases:
+    - bal
+    - money

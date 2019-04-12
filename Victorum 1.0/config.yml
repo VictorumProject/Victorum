@@ -3,5 +3,6 @@ mysql:
   database: Victorum
   user: user
   password: password
-
 map-server-port: 3539
+allowed-faction-name-letters: ABCDEFGHIJKLMNOPQRSTUWVXYZ���
+default-faction-id: 1

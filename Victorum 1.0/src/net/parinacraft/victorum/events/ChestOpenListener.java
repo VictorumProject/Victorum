@@ -36,8 +36,7 @@ public class ChestOpenListener implements Listener {
 
 		// If not own area
 		Claim c = pl.getClaimHandler().getClaim(b.getChunk().getX(), b.getChunk().getZ());
-		if (c.getFactionID() == 0
-				|| c.getFactionID() != pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID()) {
+		if (c.getFactionID() != pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID()) {
 			e.setCancelled(true);
 			p.sendMessage("§eVoit avata chestit vain omalla alueellasi.");
 		}
@@ -51,4 +50,5 @@ public class ChestOpenListener implements Listener {
 		if (e.getInventory().getType().equals(InventoryType.ENDER_CHEST))
 			e.setCancelled(true);
 	}
+
 }

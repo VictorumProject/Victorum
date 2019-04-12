@@ -6,7 +6,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
+import net.parinacraft.victorum.Opt;
 import net.parinacraft.victorum.Victorum;
 import net.parinacraft.victorum.claim.Claim;
 
@@ -17,20 +19,42 @@ public class ClaimHandler {
 	public ClaimHandler(Victorum pl) {
 		this.pl = pl;
 		claims = pl.getSqlManager().loadClaims();
+
+		// Check rent expiration dates every minute
+		Bukkit.getScheduler().scheduleSyncRepeatingTask(pl, () -> {
+			Set<Claim> expired = new HashSet<>();
+			for (Claim c : claims.values()) {
+				if (System.currentTimeMillis() > c.getExpirationDate()) {
+					// Completely expired
+					expired.add(c);
+					for (Player p : Bukkit.getOnlinePlayers()) {
+						PlayerData pd = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
+						if (pd.getFactionID() == c.getFactionID()) {
+							p.sendMessage("§eAlue kohteessa " + c.getChunkX() + ":" + c.getChunkZ()
+									+ " on vanhentunut. Kuka vain voi nyt vuokrata sen.");
+						}
+					}
+				}
+			}
+			for (Claim claim : expired) {
+				unclaim(claim);
+			}
+		}, 0, 20 * 60);
 	}
 
 	public Claim getClaim(int chunkX, int chunkZ) {
 		// Return default faction with coords if not claimed
 		int id = chunkX << 16 | (chunkZ & 0xFFFF);
-		return claims.getOrDefault(id, new Claim(pl, chunkX, chunkZ, 0));
+		return claims.getOrDefault(id, new Claim(pl, chunkX, chunkZ, Opt.DEFAULT_FACTION_ID, -1));
 	}
 
-	public void create(int chunkX, int chunkZ, int facID) {
-		Claim c = new Claim(pl, chunkX, chunkZ, facID);
+	public Claim create(int chunkX, int chunkZ, int facID) {
+		Claim c = new Claim(pl, chunkX, chunkZ, facID, System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7);
 		claims.put(c.getID(), c);
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
 			pl.getSqlManager().createClaim(c);
 		});
+		return c;
 	}
 
 	public void unclaim(Claim claim) {
@@ -55,7 +79,7 @@ public class ClaimHandler {
 	}
 
 	public Set<Claim> getAllClaims(int facID) {
-		Set<Claim> claims = new HashSet<Claim>();
+		Set<Claim> claims = new HashSet<>();
 		for (Claim claim : this.claims.values()) {
 			if (claim.getFactionID() == facID)
 				claims.add(claim);
