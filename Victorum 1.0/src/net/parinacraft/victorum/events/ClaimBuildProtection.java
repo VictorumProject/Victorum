@@ -66,6 +66,10 @@ public class ClaimBuildProtection implements Listener {
 		Claim c = pl.getClaimHandler().getClaim(ch.getX(), ch.getZ());
 		if (item == null)
 			return;
+		if (c.getFaction().isDefaultFaction())
+			return;
+		if (c.getFactionID() == pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID())
+			return;
 		switch (e.getItem().getType()) {
 		case LAVA_BUCKET:
 		case WATER_BUCKET:
@@ -76,5 +80,30 @@ public class ClaimBuildProtection implements Listener {
 		default:
 			return;
 		}
+	}
+
+	@EventHandler
+	public void onInteractOtherPlot(PlayerInteractEvent e) {
+		Block b = e.getClickedBlock();
+		if (b == null)
+			return;
+
+		ItemStack item = e.getItem();
+		if (item == null)
+			return;
+		// if (item.getType() != Material.ARMOR_STAND)
+		// return;
+
+		Chunk ch = b.getRelative(e.getBlockFace()).getChunk();
+		Claim c = pl.getClaimHandler().getClaim(ch.getX(), ch.getZ());
+		if (c.getFaction().isDefaultFaction())
+			return;
+
+		Player p = e.getPlayer();
+		if (c.getFactionID() == pl.getPlayerDataHandler().getPlayerData(p.getUniqueId()).getFactionID())
+			return;
+
+		e.setCancelled(true);
+		p.sendMessage("§eEt voi tehdä tätä factionin " + c.getFaction().getShortName() + " alueella.");
 	}
 }

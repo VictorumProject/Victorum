@@ -42,4 +42,18 @@ public class InviteHandler {
 		return values;
 	}
 
+	public HashMap<UUID, Integer> getOutgoingInvites(int factionID) {
+		HashMap<UUID, Integer> invitesForFaction = new HashMap<>(5);
+		for (Entry<UUID, Set<UUID>> e : invites.entrySet()) {
+			PlayerData inviterData = pl.getPlayerDataHandler().getPlayerData(e.getKey());
+			if (inviterData.getFactionID() == factionID) {
+				Set<UUID> invites = e.getValue();
+				for (UUID uuid : invites) {
+					int old = invitesForFaction.getOrDefault(uuid, 0);
+					invitesForFaction.put(uuid, old + 1);
+				}
+			}
+		}
+		return invitesForFaction;
+	}
 }

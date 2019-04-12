@@ -5,6 +5,8 @@ import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerMoveEvent;
 
 import net.parinacraft.victorum.Victorum;
@@ -34,5 +36,11 @@ public class MovementListener implements Listener {
 		ChatColor relColor = pl.getRelationHandler().getRelation(fac.getID(), toClaim.getFactionID()).getColor();
 		p.sendMessage(relColor + "§l-- " + toClaim.getFaction().getShortName() + " - " + toClaim.getFaction()
 				.getLongName());
+	}
+
+	@EventHandler
+	public void onFallDamage(EntityDamageEvent e) {
+		if (e.getCause() == DamageCause.FALL)
+			e.setCancelled(true);
 	}
 }
