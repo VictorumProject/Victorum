@@ -103,12 +103,4 @@ class HTTPRequestHandler extends BukkitRunnable {
 			e.printStackTrace();
 		}
 	}
-<<<<<<< HEAD
-
-	@Override
-	public synchronized void cancel() throws IllegalStateException {
-		
-	}
-=======
->>>>>>> branch 'master' of https://github.com/Juubes/Victorum.git
 }
