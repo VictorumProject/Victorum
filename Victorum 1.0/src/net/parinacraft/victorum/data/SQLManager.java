@@ -71,15 +71,6 @@ public class SQLManager {
 
 	public void createDatabases() {
 		checkConnection();
-<<<<<<< HEAD
-		try {
-			Statement stmt = conn.createStatement();
-			stmt.addBatch("CREATE TABLE IF NOT EXISTS PlayerData (UUID varchar(36), FactionID int, PRIMARY KEY (UUID))");
-			stmt.addBatch("CREATE TABLE IF NOT EXISTS Claim (ChunkX int(5), ChunkZ int(5), FactionID int)");
-			stmt.addBatch("CREATE TABLE IF NOT EXISTS Faction (FactionID int, Short varchar("
-					+ Opt.MAX_FACTION_NAME_SHORT + "), Name varchar(" + Opt.MAX_FACTION_NAME_LONG
-					+ "), Value int(30), BoardPosition int, PRIMARY KEY (FactionID, Short))");
-=======
 		try (Statement stmt = conn.createStatement(Statement.RETURN_GENERATED_KEYS, ResultSet.CONCUR_READ_ONLY)) {
 			stmt.addBatch(
 					"CREATE TABLE IF NOT EXISTS PlayerData (UUID VARCHAR(36) NOT NULL, LastSeenName VARCHAR(16) NOT NULL, FactionID int NOT NULL, FactionRole TINYINT NOT NULL DEFAULT 3, Balance BIGINT NOT NULL DEFAULT 0, PRIMARY KEY(UUID))");
@@ -92,8 +83,6 @@ public class SQLManager {
 
 			stmt.addBatch(
 					"CREATE TABLE IF NOT EXISTS Invite (Inviter VARCHAR(36) NOT NULL, Invited VARCHAR(36) NOT NULL, PRIMARY KEY (Inviter, Invited))");
-
->>>>>>> branch 'master' of https://github.com/Juubes/Victorum.git
 			// Create default faction
 			stmt.addBatch(
 					"INSERT IGNORE INTO Faction (Short, Name, Founder, Value) VALUES ('VICT', 'Victorum', 'c2b2ae69-8010-4610-a8ad-4a95de884efb', 0)");
@@ -178,8 +167,8 @@ public class SQLManager {
 	public void createPlayerData(UUID uuid) {
 		checkConnection();
 		// Make sure there is data
-		try (PreparedStatement stmt = conn.prepareStatement(
-				"INSERT INTO PlayerData (UUID, FactionID, LastSeenName) VALUES (?, ?, ?)")) {
+		try (PreparedStatement stmt = conn
+				.prepareStatement("INSERT INTO PlayerData (UUID, FactionID, LastSeenName) VALUES (?, ?, ?)")) {
 			stmt.setString(1, uuid.toString());
 			stmt.setInt(2, Opt.DEFAULT_FACTION_ID);
 			stmt.setString(3, Bukkit.getOfflinePlayer(uuid).getName());
