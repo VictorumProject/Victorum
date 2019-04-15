@@ -39,7 +39,7 @@ public class SQLManager {
 
 	private void checkConnection() {
 		if (conn == null) {
-			FileConfiguration conf = Victorum.getPlugin().getConfig();
+			FileConfiguration conf = pl.getConfig();
 			String pw = conf.getString("mysql.password");
 			String user = conf.getString("mysql.user");
 			String server = conf.getString("mysql.server");
