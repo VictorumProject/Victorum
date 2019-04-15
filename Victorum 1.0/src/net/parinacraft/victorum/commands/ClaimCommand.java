@@ -1,8 +1,10 @@
 package net.parinacraft.victorum.commands;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
@@ -227,11 +229,9 @@ public class ClaimCommand implements CommandExecutor {
 
 		pd.setFactionID(joining.getID());
 		p.sendMessage("§eLiityit factioniin " + joining.getLongName() + ".");
-		for (Player broadcastTarget : Bukkit.getOnlinePlayers()) {
-			if (pl.getPlayerDataHandler().getPlayerData(broadcastTarget.getUniqueId()).getFactionID() == joining
-					.getID()) {
-				broadcastTarget.sendMessage("§e" + p.getName() + " liittyi factioniisi.");
-			}
+		for (UUID broadcastTarget : joining.getPlayers()) {
+			if (Bukkit.getPlayer(broadcastTarget) != null)
+				Bukkit.getPlayer(broadcastTarget).sendMessage("§e" + p.getName() + " liittyi factioniisi.");
 		}
 	}
 
@@ -290,6 +290,15 @@ public class ClaimCommand implements CommandExecutor {
 			}
 		} else {
 
+			HashMap<UUID, Integer> invites = pl.getInviteHandler().getOutgoingInvites(playerFac.getID());
+			p.sendMessage("");
+			p.sendMessage("§eFactionisi kutsut:");
+			for (Entry<UUID, Integer> inviteCount : invites.entrySet()) {
+				PlayerData invitedData = pl.getPlayerDataHandler().getPlayerData(inviteCount.getKey());
+				int percentage = (int) ((float) inviteCount.getValue() / (float) playerFac.getPlayers().size() * 100f);
+				if (!playerFac.getPlayers().contains(invitedData.getUUID()))
+					p.sendMessage("§e    " + invitedData.getLastSeenName() + ": " + percentage + "%");
+			}
 		}
 	}
 
@@ -439,17 +448,19 @@ public class ClaimCommand implements CommandExecutor {
 	}
 
 	private void listFactions(Player p, int pageNumber) {
-		ArrayList<Faction> factionList = new ArrayList<>(pl.getFactionHandler().getAllFactions());
+		if (pageNumber < 1)
+			pageNumber = 1;
 
-		// // Remove default faction from list
-		// Faction vict = null;
-		// for (Faction faction : factionList) {
-		// if (faction.isDefaultFaction()) {
-		// vict = faction;
-		// break;
-		// }
-		// }
-		// factionList.remove(vict);
+		ArrayList<Faction> factionList = new ArrayList<>(pl.getFactionHandler().getAllFactions());
+		// Remove default faction from list
+		Faction vict = null;
+		for (Faction faction : factionList) {
+			if (faction.isDefaultFaction()) {
+				vict = faction;
+				break;
+			}
+		}
+		factionList.remove(vict);
 
 		// Sort the list by value
 		factionList.sort(new Comparator<Faction>() {
@@ -464,14 +475,19 @@ public class ClaimCommand implements CommandExecutor {
 
 		// Print in chat
 		PlayerData pd = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
-		p.sendMessage("§eListataan " + pageNumber + "/" + (factionList.size() / 10 + 1) + " sivu factioneista...");
-		int size = Math.min((pageNumber) * 10, factionList.size());
-		for (int i = pageNumber; i < size; i++) {
+		p.sendMessage("§eListataan " + pageNumber + "/" + (factionList.size() / 10 + 1) + " sivu " + factionList.size()
+				+ " factioneista...");
+		NumberFormat format = NumberFormat.getCurrencyInstance(Locale.US);
+		format.setMaximumFractionDigits(0);
+
+		// int size = Math.min((pageNumber) * 10, factionList.size());
+		int size = factionList.size();
+		for (int i = (pageNumber - 1) * 10; i < size; i++) {
 			Faction fac = factionList.get(i);
 			ChatColor color = pl.getRelationHandler().getRelation(pd.getFactionID(), factionList.get(i).getID())
 					.getColor();
-			p.sendMessage("  " + color + " " + fac.getShortName() + "§e: $" + fac.getValue() + "/" + fac.getPlayers()
-					.size() + "p/" + fac.getClaims().size() + "c");
+			p.sendMessage("  " + color + " " + fac.getShortName() + "§e: " + format.format(fac.getValue()) + " / " + fac
+					.getPlayers().size() + "p / " + fac.getClaims().size() + "c");
 		}
 	}
 
@@ -491,6 +507,7 @@ public class ClaimCommand implements CommandExecutor {
 		String founderStr = (founder == null ? fac.getFounder().toString() : founder.getName());
 		caller.sendMessage("");
 		caller.sendMessage("              §eFaction " + color + fac.getShortName());
+		caller.sendMessage("");
 		caller.sendMessage("§eKoko nimi: " + fac.getLongName());
 		caller.sendMessage("§ePerustaja: " + color + founderStr);
 		caller.sendMessage("§eJäsenet (" + players.size() + "): " + color + playerList.substring(2, playerList.length()

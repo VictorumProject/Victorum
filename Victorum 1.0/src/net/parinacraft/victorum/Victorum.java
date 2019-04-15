@@ -1,8 +1,12 @@
 package net.parinacraft.victorum;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import net.parinacraft.victorum.claim.Faction;
 import net.parinacraft.victorum.commands.BalanceCommand;
 import net.parinacraft.victorum.commands.ClaimCommand;
 import net.parinacraft.victorum.data.ClaimHandler;
@@ -17,7 +21,6 @@ import net.parinacraft.victorum.events.ClaimBuildProtection;
 import net.parinacraft.victorum.events.ClaimInvClickCanceller;
 import net.parinacraft.victorum.events.ConnectionListener;
 import net.parinacraft.victorum.events.MovementListener;
-import net.parinacraft.victorum.http.MapServer;
 import net.parinacraft.victorum.test.GrassForMoney;
 
 public class Victorum extends JavaPlugin {
@@ -27,8 +30,6 @@ public class Victorum extends JavaPlugin {
 	private InviteHandler inviteHandler;
 	private ClaimHandler claimHandler;
 	private SQLManager sqlManager;
-
-	private MapServer mapServer;
 
 	@Override
 	public void onEnable() {
@@ -64,11 +65,19 @@ public class Victorum extends JavaPlugin {
 		this.relationHandler = new RelationHandler(this);
 		this.playerDataHandler = new PlayerDataHandler(this);
 
+		List<Faction> removing = new ArrayList<>();
+		for (Faction fac : factionHandler.getAllFactions()) {
+			if (fac.getPlayers().size() == 0)
+				removing.add(fac);
+		}
+		removing.forEach((Faction fac) -> {
+			factionHandler.delete(fac.getID());
+			System.out.println("Removed faction " + fac.getLongName() + " because they had no members.");
+		});
+
+		// Log end time
 		int timeMS = (int) ((System.nanoTime() - start) / 1E6);
 		getLogger().info("Done (" + timeMS + "ms)");
-
-		mapServer = new MapServer(this);
-		mapServer.startAsync();
 	}
 
 	@Override
@@ -97,10 +106,6 @@ public class Victorum extends JavaPlugin {
 
 	public SQLManager getSqlManager() {
 		return sqlManager;
-	}
-
-	public MapServer getMapServer() {
-		return mapServer;
 	}
 
 	public InviteHandler getInviteHandler() {
