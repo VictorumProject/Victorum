@@ -39,7 +39,7 @@ public class SQLManager {
 
 	private void checkConnection() {
 		if (conn == null) {
-			FileConfiguration conf = Victorum.getPlugin().getConfig();
+			FileConfiguration conf = pl.getConfig();
 			String pw = conf.getString("mysql.password");
 			String user = conf.getString("mysql.user");
 			String server = conf.getString("mysql.server");
@@ -83,7 +83,6 @@ public class SQLManager {
 
 			stmt.addBatch(
 					"CREATE TABLE IF NOT EXISTS Invite (Inviter VARCHAR(36) NOT NULL, Invited VARCHAR(36) NOT NULL, PRIMARY KEY (Inviter, Invited))");
-
 			// Create default faction
 			stmt.addBatch(
 					"INSERT IGNORE INTO Faction (Short, Name, Founder, Value) VALUES ('VICT', 'Victorum', 'c2b2ae69-8010-4610-a8ad-4a95de884efb', 0)");
@@ -168,8 +167,8 @@ public class SQLManager {
 	public void createPlayerData(UUID uuid) {
 		checkConnection();
 		// Make sure there is data
-		try (PreparedStatement stmt = conn.prepareStatement(
-				"INSERT INTO PlayerData (UUID, FactionID, LastSeenName) VALUES (?, ?, ?)")) {
+		try (PreparedStatement stmt = conn
+				.prepareStatement("INSERT INTO PlayerData (UUID, FactionID, LastSeenName) VALUES (?, ?, ?)")) {
 			stmt.setString(1, uuid.toString());
 			stmt.setInt(2, Opt.DEFAULT_FACTION_ID);
 			stmt.setString(3, Bukkit.getOfflinePlayer(uuid).getName());

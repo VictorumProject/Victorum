@@ -8,6 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import net.parinacraft.victorum.claim.Faction;
 import net.parinacraft.victorum.commands.BalanceCommand;
+import net.parinacraft.victorum.commands.BaltopCommand;
 import net.parinacraft.victorum.commands.ClaimCommand;
 import net.parinacraft.victorum.data.ClaimHandler;
 import net.parinacraft.victorum.data.FactionHandler;
@@ -24,9 +25,10 @@ import net.parinacraft.victorum.events.MovementListener;
 import net.parinacraft.victorum.test.GrassForMoney;
 
 public class Victorum extends JavaPlugin {
-	private FactionHandler factionHandler;
 	private PlayerDataHandler playerDataHandler;
 	private RelationHandler relationHandler;
+	private FactionHandler factionHandler;
+	private EconomyHandler economyHandler;
 	private InviteHandler inviteHandler;
 	private ClaimHandler claimHandler;
 	private SQLManager sqlManager;
@@ -41,6 +43,7 @@ public class Victorum extends JavaPlugin {
 
 		getCommand("claim").setExecutor(new ClaimCommand(this));
 		getCommand("balance").setExecutor(new BalanceCommand(this));
+		getCommand("baltop").setExecutor(new BaltopCommand(this));
 
 		Bukkit.getPluginManager().registerEvents(new ConnectionListener(this), this);
 		Bukkit.getPluginManager().registerEvents(new ChestOpenListener(this), this);
@@ -84,10 +87,6 @@ public class Victorum extends JavaPlugin {
 	public void onDisable() {
 	}
 
-	public static Victorum getPlugin() {
-		return (Victorum) Bukkit.getPluginManager().getPlugin("Victorum");
-	}
-
 	public FactionHandler getFactionHandler() {
 		return this.factionHandler;
 	}
@@ -112,7 +111,8 @@ public class Victorum extends JavaPlugin {
 		return inviteHandler;
 	}
 
-	public static Victorum get() {
-		return (Victorum) Bukkit.getPluginManager().getPlugin("Victorum");
+	public EconomyHandler getEconomyHandler() {
+		return economyHandler;
 	}
+
 }
