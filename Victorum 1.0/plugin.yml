@@ -1,8 +1,8 @@
-main: net.parinacraft.victorum.Victorum
+main: me.victorum.victorum.Victorum
 name: Victorum
 version: 1.0.0
 author: Juubes
-webite: https://parinacraft.net
+webite: https://victorum.me/
 load: STARTUP
 depend:
 - Vault
@@ -17,4 +17,4 @@ commands:
     aliases:
     - bal
     - money
-  baltop:
+  baltop: null
