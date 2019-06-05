@@ -61,6 +61,8 @@ public class ClaimCommand implements CommandExecutor {
 				openMap(p, playerFac, chunkX, chunkZ);
 			} else if (args[0].equalsIgnoreCase("list")) {
 				listFactions(p, 1);
+			} else if (args[0].equalsIgnoreCase("fly")) {
+				p.performCommand("vfly");
 			} else if (args[0].equalsIgnoreCase("sethome")) {
 				setFactionHome(p, pd, p.getLocation());
 			} else if (args[0].equalsIgnoreCase("home")) {
@@ -212,6 +214,7 @@ public class ClaimCommand implements CommandExecutor {
 		sender.sendMessage("§e    /" + lbl + " uninvite");
 		sender.sendMessage("§e    /" + lbl + " invites");
 		sender.sendMessage("§e    /" + lbl + " leave");
+		sender.sendMessage("§e    /" + lbl + " fly");
 	}
 
 	private void joinFaction(Player p, String name) {

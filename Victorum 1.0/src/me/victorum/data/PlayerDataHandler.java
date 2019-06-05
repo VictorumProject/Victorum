@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import me.victorum.victorum.Victorum;
@@ -42,9 +41,9 @@ public class PlayerDataHandler {
 			playerData.put(pd.getUniqueId(), defaultPlayerData);
 
 			// Update database
-			Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-				pl.getSqlManager().createPlayerData(pd.getUniqueId());
-			});
+			pl.getSqlManager().createPlayerData(pd.getUniqueId());
+			pl.getSqlManager().createExtras(pd.getUniqueId());
+
 		}
 	}
 

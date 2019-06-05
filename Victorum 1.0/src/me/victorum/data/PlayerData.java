@@ -37,7 +37,8 @@ public class PlayerData {
 	 * Sets new default values for other parameters.
 	 */
 	public PlayerData(Victorum pl, UUID id, String lastSeenName) {
-		this(pl, id, Opt.DEFAULT_FACTION_ID, FactionRole.MEMBER, 0, lastSeenName, new Extras(false, false, false));
+		this(pl, id, Opt.DEFAULT_FACTION_ID, FactionRole.MEMBER, 0, lastSeenName, new Extras(pl, id, false, false,
+				false));
 	}
 
 	public int getFactionID() {
@@ -60,9 +61,9 @@ public class PlayerData {
 	}
 
 	public void setFactionID(int id) {
-		if (this.factionID != id) {
+		if (this.factionID != id)
 			pl.getInviteHandler().removeOutgoingInvites(UUID);
-		}
+
 		this.factionID = id;
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
 			pl.getSqlManager().setFactionID(this.UUID, id);

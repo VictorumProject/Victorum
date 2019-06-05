@@ -73,7 +73,7 @@ public class Victorum extends JavaPlugin {
 
 		List<Faction> removing = new ArrayList<>();
 		for (Faction fac : factionHandler.getAllFactions()) {
-			if (fac.getPlayers().size() == 0)
+			if (fac.getPlayers().size() == 0 && !fac.isDefaultFaction())
 				removing.add(fac);
 		}
 		removing.forEach((Faction fac) -> {

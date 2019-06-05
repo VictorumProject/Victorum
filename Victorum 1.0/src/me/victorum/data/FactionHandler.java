@@ -2,6 +2,7 @@ package me.victorum.data;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -10,6 +11,7 @@ import com.google.common.base.Preconditions;
 
 import me.victorum.claim.Faction;
 import me.victorum.claim.FactionRole;
+import me.victorum.victorum.Opt;
 import me.victorum.victorum.Victorum;
 
 public class FactionHandler {
@@ -26,8 +28,17 @@ public class FactionHandler {
 	}
 
 	public void delete(int facID) {
-		factions.remove(facID);
+
+		Faction fac = factions.get(facID);
+
+		for (UUID uuid : fac.getPlayers()) {
+			pl.getPlayerDataHandler().getPlayerData(uuid).setFactionID(Opt.DEFAULT_FACTION_ID);
+		}
 		pl.getClaimHandler().unclaimAll(facID);
+		factions.remove(facID);
+
+		// TODO: Joku kusi tässä
+
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
 			pl.getSqlManager().removeFaction(facID);
 		});

@@ -89,6 +89,7 @@ public class SQLManager {
 			// Create default faction
 			stmt.addBatch(
 					"INSERT IGNORE INTO Faction (Short, Name, Founder, Value) VALUES ('VICT', 'Victorum', 'c2b2ae69-8010-4610-a8ad-4a95de884efb', 0)");
+
 			stmt.executeBatch();
 			try (ResultSet rs = stmt.getGeneratedKeys()) {
 				if (rs.next()) {
@@ -142,7 +143,7 @@ public class SQLManager {
 					boolean canFly = rs.getBoolean("CanFly");
 					boolean nearCommand = rs.getBoolean("NearCommand");
 					boolean canMineSpawners = rs.getBoolean("CanMineSpawners");
-					Extras extras = new Extras(canFly, nearCommand, canMineSpawners);
+					Extras extras = new Extras(pl, id, canFly, nearCommand, canMineSpawners);
 					val.put(id, new PlayerData(pl, id, facID, role, balance, lastSeenName, extras));
 				}
 			}
@@ -431,7 +432,7 @@ public class SQLManager {
 		}
 	}
 
-	public void canUseNearCommand(UUID playerUUID, boolean can) {
+	public void saveCanUseNearCommand(UUID playerUUID, boolean can) {
 		checkConnection();
 		try (PreparedStatement stmt = conn.prepareStatement("UPDATE Extras SET NearCommand = ? WHERE UUID = ?")) {
 			stmt.setBoolean(1, can);
@@ -447,6 +448,18 @@ public class SQLManager {
 		try (PreparedStatement stmt = conn.prepareStatement("UPDATE Extras SET CanMineSpawners = ? WHERE UUID = ?")) {
 			stmt.setBoolean(1, can);
 			stmt.setString(2, playerUUID.toString());
+			stmt.execute();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	public void createExtras(UUID playerUUID) {
+		checkConnection();
+		// Make sure there is data
+		try (PreparedStatement stmt = conn.prepareStatement(
+				"INSERT INTO Extras (UUID, CanFly, NearCommand, CanMineSpawners) VALUES (?, FALSE, FALSE, FALSE)")) {
+			stmt.setString(1, playerUUID.toString());
 			stmt.execute();
 		} catch (SQLException e1) {
 			e1.printStackTrace();
