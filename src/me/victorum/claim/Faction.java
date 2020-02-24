@@ -124,4 +124,8 @@ public class Faction {
 		return pl.getClaimHandler().getAllClaims(this.factionID);
 	}
 
+	public String getShortNameForRelation(int otherFacID) {
+		return pl.getRelationHandler().getRelation(this.factionID, otherFacID).getColor() + this.getShortName();
+	}
+
 }

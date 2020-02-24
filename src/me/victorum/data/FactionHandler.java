@@ -1,7 +1,9 @@
 package me.victorum.data;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -21,6 +23,18 @@ public class FactionHandler {
 	public FactionHandler(Victorum pl) {
 		this.pl = pl;
 		this.factions = pl.getSqlManager().loadFactions();
+
+		// Remove factions with no members
+		List<Faction> removing = new ArrayList<>();
+		for (Faction fac : factions.values()) {
+			if (fac.getPlayers().size() == 0 && !fac.isDefaultFaction())
+				removing.add(fac);
+		}
+		removing.forEach((Faction fac) -> {
+			this.delete(fac.getID());
+			System.out.println("Removed faction " + fac.getLongName() + " because they had no members.");
+		});
+
 	}
 
 	public Faction getFaction(int id) {
@@ -53,7 +67,7 @@ public class FactionHandler {
 
 	public boolean exists(String shortName) {
 		for (Faction fac : factions.values()) {
-			if (fac.getShortName().contentEquals(shortName))
+			if (fac.getShortName().equalsIgnoreCase(shortName))
 				return true;
 		}
 		return false;

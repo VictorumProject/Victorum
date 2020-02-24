@@ -78,6 +78,8 @@ public class ClaimCommand implements CommandExecutor {
 				p.sendMessage("§e/f uninvite <nimi>");
 			} else if (args[0].equalsIgnoreCase("invites")) {
 				showInvites(p, pd, playerFac);
+			} else if (args[0].equalsIgnoreCase("kick")) {
+				p.sendMessage("§e/f kick <nimi>");
 			} else if (args[0].equalsIgnoreCase("leave")) {
 				leaveFaction(p, playerFac);
 			} else if (args[0].equalsIgnoreCase("show") || args[0].equalsIgnoreCase("who")) {
@@ -126,6 +128,8 @@ public class ClaimCommand implements CommandExecutor {
 				invite(p, args[1]);
 			} else if (args[0].equalsIgnoreCase("uninvite")) {
 				uninvite(p, args[1]);
+			} else if (args[0].equalsIgnoreCase("kick")) {
+				kick(p, args[1]);
 			} else if (args[0].equalsIgnoreCase("bal") || args[0].equalsIgnoreCase("balance") || args[0]
 					.equalsIgnoreCase("money")) {
 				String name = args[1].toUpperCase();
@@ -202,19 +206,19 @@ public class ClaimCommand implements CommandExecutor {
 
 	private void printUsage(CommandSender sender, String lbl) {
 		sender.sendMessage("§eVictorum v" + pl.getDescription().getVersion());
-		sender.sendMessage("§e    /" + lbl + " create");
-		sender.sendMessage("§e    /" + lbl + " join");
-		sender.sendMessage("§e    /" + lbl + " setname");
-		sender.sendMessage("§e    /" + lbl + " claim/buy");
-		sender.sendMessage("§e    /" + lbl + " who/show");
-		sender.sendMessage("§e    /" + lbl + " map");
-		sender.sendMessage("§e    /" + lbl + " home");
-		sender.sendMessage("§e    /" + lbl + " sethome");
-		sender.sendMessage("§e    /" + lbl + " invite");
-		sender.sendMessage("§e    /" + lbl + " uninvite");
-		sender.sendMessage("§e    /" + lbl + " invites");
-		sender.sendMessage("§e    /" + lbl + " leave");
-		sender.sendMessage("§e    /" + lbl + " fly");
+		sender.sendMessage("§e    /" + lbl + " create §bluo uuden factionin. Sinusta tulee sen perustaja");
+		sender.sendMessage("§e    /" + lbl + " join §bliittyy factioniin");
+		sender.sendMessage("§e    /" + lbl + " setname §basettaa factionisi nimen");
+		sender.sendMessage("§e    /" + lbl + " claim/buy §bsuojaa aluetta factionillesi");
+		sender.sendMessage("§e    /" + lbl + " who/show §bnäyttää oman tai toisen factionin tiedot ja jäsenet");
+		sender.sendMessage("§e    /" + lbl + " map §bnäyttää läheiset suojatut alueet kartassa");
+		sender.sendMessage("§e    /" + lbl + " home §bteleporttaa factionisi kotiin");
+		sender.sendMessage("§e    /" + lbl + " sethome §basettaa factionisi kodin");
+		sender.sendMessage("§e    /" + lbl + " invite §bvoit kutsua pelaajan factioniisi");
+		sender.sendMessage("§e    /" + lbl + " uninvite §bvoit poistaa pelaajan kutsun factioniisi");
+		sender.sendMessage("§e    /" + lbl + " invites §bnäyttää nykyiset kutsusi");
+		sender.sendMessage("§e    /" + lbl + " leave §bjättää nykyisen factionisi");
+		sender.sendMessage("§e    /" + lbl + " fly §baktivoi lentotilan alueellasi");
 	}
 
 	private void joinFaction(Player p, String name) {
@@ -238,7 +242,7 @@ public class ClaimCommand implements CommandExecutor {
 
 		// Test for 50% of invites
 		int inviteCount = pl.getInviteHandler().getIncomingInvites(p.getUniqueId()).size();
-		if ((inviteCount / joining.getPlayers().size()) < 0.5) {
+		if (((float) inviteCount / (float) joining.getPlayers().size()) < 0.5) {
 			p.sendMessage("§eAinakin 50% factionin jäsenistä täytyy kutsua sinut, jotta voit liittyä.");
 			return;
 		}
@@ -290,7 +294,7 @@ public class ClaimCommand implements CommandExecutor {
 		for (UUID id : pl.getPlayerDataHandler().getPlayerData(inviter.getUniqueId()).getFaction().getPlayers()) {
 			Player p = Bukkit.getPlayer(id);
 			if (p != null)
-				p.sendMessage("§e" + inviter.getName() + " kutsui pelaajan " + invitedName);
+				p.sendMessage("§e" + inviter.getName() + " kutsui pelaajan " + invitedName + ".");
 		}
 	}
 
@@ -324,7 +328,7 @@ public class ClaimCommand implements CommandExecutor {
 		Player target = Bukkit.getPlayer(invitedName);
 		if (target != null) {
 			Faction fac = pl.getPlayerDataHandler().getPlayerData(inviter.getUniqueId()).getFaction();
-			target.sendMessage("§e" + inviter.getName() + " poisti kutsusi factioniin " + fac.getLongName());
+			target.sendMessage("§e" + inviter.getName() + " poisti kutsusi factioniin " + fac.getLongName() + ".");
 		}
 		for (UUID id : pl.getPlayerDataHandler().getPlayerData(inviter.getUniqueId()).getFaction().getPlayers()) {
 			Player p = Bukkit.getPlayer(id);
@@ -510,6 +514,21 @@ public class ClaimCommand implements CommandExecutor {
 		}
 		p.sendMessage("");
 		p.sendMessage(rows);
+
+		Faction otherFac = pl.getClaimHandler().getClaim(p.getLocation().getChunk().getX(), p.getLocation().getChunk()
+				.getZ()).getFaction();
+		String currentChunkName = pl.getRelationHandler().getRelation(playerFac.getID(), otherFac.getID()).getColor()
+				+ otherFac.getShortName();
+		p.sendMessage("§eAlueesi: " + currentChunkName);
+		String reference = "";
+		for (Entry<Integer, Character> e : factionSigns.entrySet()) {
+			if (e.getKey() == Opt.DEFAULT_FACTION_ID)
+				continue;
+			Faction fac = pl.getFactionHandler().getFaction(e.getKey());
+			ChatColor color = pl.getRelationHandler().getRelation(playerFac.getID(), fac.getID()).getColor();
+			reference += color.toString() + e.getValue() + ": " + fac.getShortName() + "; ";
+		}
+		p.sendMessage(reference.substring(0, reference.length() - 2));
 	}
 
 	private void listFactions(Player p, int pageNumber) {
@@ -663,5 +682,21 @@ public class ClaimCommand implements CommandExecutor {
 			p.sendMessage("§eOlit viimeinen factionissasi, joten se lopetettiin.");
 			Bukkit.broadcastMessage(p.getDisplayName() + " lopetti factionin " + oldFactionName + ".");
 		}
+	}
+
+	private void kick(Player p, String arg1) {
+		PlayerData targetData = pl.getPlayerDataHandler().getPlayerData(arg1);
+		PlayerData pd = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
+		if (pd.getFaction().isDefaultFaction()) {
+			p.sendMessage("§eEt ole missään factionissa. /f create <lyhenne>");
+			return;
+		}
+		if (targetData.getFactionID() != pd.getFactionID()) {
+			p.sendMessage("§eKohde ei ole factionissasi.");
+			return;
+		}
+		pl.getKickHandler().wishKick(pd.getUUID(), targetData.getUUID());
+		p.sendMessage("§eÄänestit pelaajan " + targetData.getLastSeenName()
+				+ " potkimista. Kohde ei saa tästä ilmoitusta.");
 	}
 }

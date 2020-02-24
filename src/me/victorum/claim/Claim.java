@@ -44,7 +44,7 @@ public class Claim {
 
 	public static long getWeeklyRent(int chunkX, int chunkZ) {
 		double distance = Math.sqrt(chunkX * chunkX + chunkZ * chunkZ);
-		long hourRent = (long) (25 + Math.pow(distance, 1.4));
+		long hourRent = (long) (25 + Math.pow(distance, 1.3));
 		return hourRent * 7 * 24;
 	}
 }

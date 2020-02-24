@@ -76,7 +76,7 @@ public class SQLManager {
 			stmt.addBatch(
 					"CREATE TABLE IF NOT EXISTS PlayerData (UUID VARCHAR(36) NOT NULL, LastSeenName VARCHAR(16) NOT NULL, FactionID int NOT NULL, FactionRole TINYINT NOT NULL DEFAULT 3, Balance BIGINT NOT NULL DEFAULT 0, PRIMARY KEY(UUID))");
 			stmt.addBatch(
-					"CREATE TABLE IF NOT EXISTS Faction (FactionID INT NOT NULL AUTO_INCREMENT, Short VARCHAR(4) UNIQUE NOT NULL, Name VARCHAR(50) NOT NULL, Founder VARCHAR(36) NOT NULL, Value BIGINT NOT NULL DEFAULT 0, LeaderThreshold BIGINT NOT NULL, Home INT DEFAULT NULL, PRIMARY KEY (FactionID))");
+					"CREATE TABLE IF NOT EXISTS Faction (FactionID INT NOT NULL AUTO_INCREMENT, Short VARCHAR(4) UNIQUE NOT NULL, Name VARCHAR(50) NOT NULL, Founder VARCHAR(36) NOT NULL, Value BIGINT NOT NULL DEFAULT 0, LeaderThreshold BIGINT NOT NULL DEFAULT 0, Home INT DEFAULT NULL, PRIMARY KEY (FactionID))");
 			stmt.addBatch(
 					"CREATE TABLE IF NOT EXISTS Home (FactionID INT PRIMARY KEY NOT NULL, X FLOAT NOT  NULL, Y FLOAT NOT NULL, Z FLOAT NOT NULL, Yaw FLOAT, Pitch FLOAT, FOREIGN KEY (FactionID) REFERENCES Faction(FactionID) ON DELETE CASCADE)");
 			stmt.addBatch(
@@ -84,11 +84,13 @@ public class SQLManager {
 			stmt.addBatch(
 					"CREATE TABLE IF NOT EXISTS Invite (Inviter VARCHAR(36) NOT NULL, Invited VARCHAR(36) NOT NULL, PRIMARY KEY (Inviter, Invited))");
 			stmt.addBatch(
+					"CREATE TABLE IF NOT EXISTS KickWishes (Wisher VARCHAR(36) NOT NULL, Target VARCHAR(36) NOT NULL, PRIMARY KEY (Wisher, Target))");
+			stmt.addBatch(
 					"CREATE TABLE IF NOT EXISTS Extras (UUID VARCHAR(36) NOT NULL, CanFly BOOLEAN NOT NULL, NearCommand BOOLEAN NOT NULL, CanMineSpawners BOOLEAN NOT NULL, FOREIGN KEY (UUID) REFERENCES PlayerData(UUID))");
 
 			// Create default faction
-			stmt.addBatch(
-					"INSERT IGNORE INTO Faction (Short, Name, Founder, Value) VALUES ('VICT', 'Victorum', 'c2b2ae69-8010-4610-a8ad-4a95de884efb', 0)");
+			stmt.addBatch("INSERT IGNORE INTO Faction (FactionID, Short, Name, Founder, Value) VALUES ("
+					+ Opt.DEFAULT_FACTION_ID + ", 'VICT', 'Victorum', 'c2b2ae69-8010-4610-a8ad-4a95de884efb', 0)");
 
 			stmt.executeBatch();
 			try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -460,6 +462,58 @@ public class SQLManager {
 		try (PreparedStatement stmt = conn.prepareStatement(
 				"INSERT INTO Extras (UUID, CanFly, NearCommand, CanMineSpawners) VALUES (?, FALSE, FALSE, FALSE)")) {
 			stmt.setString(1, playerUUID.toString());
+			stmt.execute();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	public HashMap<UUID, Set<UUID>> getAllKickWishes() {
+		HashMap<UUID, Set<UUID>> kicks = new HashMap<>();
+		try (Statement stmt = conn.createStatement()) {
+			try (ResultSet rs = stmt.executeQuery("SELECT Wisher, Target FROM KickWishes")) {
+				while (rs.next()) {
+					UUID wisher = UUID.fromString(rs.getString("Wisher"));
+					UUID target = UUID.fromString(rs.getString("Target"));
+
+					kicks.putIfAbsent(wisher, new HashSet<>());
+					Set<UUID> invitesForInviter = kicks.get(wisher);
+					invitesForInviter.add(target);
+				}
+			}
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+		return kicks;
+	}
+
+	public void removeKickWish(UUID kicker, UUID target) {
+		checkConnection();
+		try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM KickWishes WHERE Wisher = ? AND Target = ?")) {
+			stmt.setString(1, kicker.toString());
+			stmt.setString(2, target.toString());
+			stmt.execute();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	public void removeOutgoingKicks(UUID kicker) {
+		checkConnection();
+		try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM KickWishes WHERE Wisher = ?")) {
+			stmt.setString(1, kicker.toString());
+			stmt.execute();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+
+	}
+
+	public void createKickWish(UUID kicker, UUID target) {
+		checkConnection();
+		try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO KickWishes (Wisher, Target) VALUES (?, ?)")) {
+			stmt.setString(1, kicker.toString());
+			stmt.setString(2, target.toString());
 			stmt.execute();
 		} catch (SQLException e1) {
 			e1.printStackTrace();

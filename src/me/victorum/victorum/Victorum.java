@@ -1,12 +1,8 @@
 package me.victorum.victorum;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import me.victorum.claim.Faction;
 import me.victorum.commands.BalanceCommand;
 import me.victorum.commands.BaltopCommand;
 import me.victorum.commands.ClaimCommand;
@@ -31,6 +27,7 @@ public class Victorum extends JavaPlugin {
 	private EconomyHandler economyHandler;
 	private InviteHandler inviteHandler;
 	private ClaimHandler claimHandler;
+	private KickHandler kickHandler;
 	private SQLManager sqlManager;
 
 	// TODO: teamdamagestop
@@ -64,22 +61,13 @@ public class Victorum extends JavaPlugin {
 		// Load all data from database to memory
 		getLogger().info("Importing data from MySQL...");
 		long start = System.nanoTime();
+		this.kickHandler = new KickHandler(this);
 		this.claimHandler = new ClaimHandler(this);
 		this.inviteHandler = new InviteHandler(this);
 		this.economyHandler = new EconomyHandler(this);
 		this.factionHandler = new FactionHandler(this);
 		this.relationHandler = new RelationHandler(this);
 		this.playerDataHandler = new PlayerDataHandler(this);
-
-		List<Faction> removing = new ArrayList<>();
-		for (Faction fac : factionHandler.getAllFactions()) {
-			if (fac.getPlayers().size() == 0 && !fac.isDefaultFaction())
-				removing.add(fac);
-		}
-		removing.forEach((Faction fac) -> {
-			factionHandler.delete(fac.getID());
-			System.out.println("Removed faction " + fac.getLongName() + " because they had no members.");
-		});
 
 		// Log end time
 		int timeMS = (int) ((System.nanoTime() - start) / 1E6);
@@ -116,6 +104,10 @@ public class Victorum extends JavaPlugin {
 
 	public EconomyHandler getEconomyHandler() {
 		return economyHandler;
+	}
+
+	public KickHandler getKickHandler() {
+		return kickHandler;
 	}
 
 }
