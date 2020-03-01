@@ -1,2 +1,7 @@
 /bin/
 /target/
+.classpath
+.project
+Victorum.iml
+.idea/
+.settings/
