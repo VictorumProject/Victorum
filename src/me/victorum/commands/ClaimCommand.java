@@ -520,6 +520,8 @@ public class ClaimCommand implements CommandExecutor {
 		String currentChunkName = pl.getRelationHandler().getRelation(playerFac.getID(), otherFac.getID()).getColor()
 				+ otherFac.getShortName();
 		p.sendMessage("§eAlueesi: " + currentChunkName);
+
+		// The variable stores the mapping of colors to faction names
 		String reference = "";
 		for (Entry<Integer, Character> e : factionSigns.entrySet()) {
 			if (e.getKey() == Opt.DEFAULT_FACTION_ID)
@@ -528,7 +530,8 @@ public class ClaimCommand implements CommandExecutor {
 			ChatColor color = pl.getRelationHandler().getRelation(playerFac.getID(), fac.getID()).getColor();
 			reference += color.toString() + e.getValue() + ": " + fac.getShortName() + "; ";
 		}
-		p.sendMessage(reference.substring(0, reference.length() - 2));
+		if (reference.length() != 0)
+			p.sendMessage(reference.substring(0, reference.length() - 2));
 	}
 
 	private void listFactions(Player p, int pageNumber) {
