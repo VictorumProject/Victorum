@@ -23,8 +23,12 @@ public class ChestOpenListener implements Listener {
 	@EventHandler
 	public void onChestOpen(PlayerInteractEvent e) {
 		Block b = e.getClickedBlock();
+
+		// Debug
 		if (e.getPlayer().isSneaking())
 			return;
+		//
+
 		if (!e.getAction().equals(Action.RIGHT_CLICK_BLOCK))
 			return;
 		if (b == null)

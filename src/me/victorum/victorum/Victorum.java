@@ -31,6 +31,9 @@ public class Victorum extends JavaPlugin {
 	private SQLManager sqlManager;
 
 	// TODO: teamdamagestop
+	// TODO: unclaim
+	// TODO: claiming another factions' chunks
+
 
 	@Override
 	public void onEnable() {

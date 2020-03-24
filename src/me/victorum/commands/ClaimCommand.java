@@ -368,6 +368,7 @@ public class ClaimCommand implements CommandExecutor {
 		}
 	}
 
+	// TODO: Faction chat
 	private void setFactionHome(Player p, PlayerData pd, Location location) {
 		// TODO: Possible faction flags? Flag LEADER_CAN_SET_HOME?
 		Faction fac = pd.getFaction();
@@ -405,6 +406,7 @@ public class ClaimCommand implements CommandExecutor {
 		int claimFaction = pl.getClaimHandler().getClaim(chunkX, chunkZ).getFactionID();
 		if (claimFaction != Opt.DEFAULT_FACTION_ID) {
 			// TODO: Overclaiming
+			// TODO: Message if own faction already owns it
 			claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " on jo varattu!");
 			return;
 		}
@@ -422,6 +424,9 @@ public class ClaimCommand implements CommandExecutor {
 
 	/**
 	 * First count the prize and rent all chunks if has money
+	 *
+	 * TODO: Still not done
+	 * TODO: Do similar method for unclaiming
 	 */
 	private void claimRadius(Player p, Faction fac, Chunk ch, String arg0, String arg1) {
 		if (fac.getID() == Opt.DEFAULT_FACTION_ID) {
@@ -455,7 +460,7 @@ public class ClaimCommand implements CommandExecutor {
 					created++;
 				}
 			}
-			p.sendMessage("§eClaimattu " + created + " aluetta.");
+			p.sendMessage("§eClaimattu " + created + " neutraalia aluetta.");
 			if (taken != 0)
 				p.sendMessage("§e" + taken + " aluetta on jo varattu, ja ne täytyy ostaa manuaalisesti.");
 		} catch (Exception e) {
@@ -464,6 +469,8 @@ public class ClaimCommand implements CommandExecutor {
 
 	}
 
+
+	// TODO: enemy can unclaim own area from center -- has to be from the edges
 	private void unclaiming(Player p, Faction playerFac, int chunkX, int chunkZ) {
 		PlayerData pd = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
 		if (pd.getRole() != FactionRole.LEADER) {
@@ -471,6 +478,7 @@ public class ClaimCommand implements CommandExecutor {
 			return;
 		}
 		pl.getClaimHandler().unclaim(pl.getClaimHandler().getClaim(chunkX, chunkZ));
+
 	}
 
 	private void openMap(Player p, Faction playerFac, int centerChunkX, int centerChunkZ) {
