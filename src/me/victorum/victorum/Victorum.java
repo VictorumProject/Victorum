@@ -65,9 +65,9 @@ public class Victorum extends JavaPlugin {
 		this.claimHandler = new ClaimHandler(this);
 		this.inviteHandler = new InviteHandler(this);
 		this.economyHandler = new EconomyHandler(this);
+		this.playerDataHandler = new PlayerDataHandler(this);
 		this.factionHandler = new FactionHandler(this);
 		this.relationHandler = new RelationHandler(this);
-		this.playerDataHandler = new PlayerDataHandler(this);
 
 		// Log end time
 		int timeMS = (int) ((System.nanoTime() - start) / 1E6);
