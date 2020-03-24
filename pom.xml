@@ -9,7 +9,6 @@
 	<description>An experimental Factions gamemode.</description>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
-		<sourceDirectory>src</sourceDirectory>
 
 		<plugins>
 			<plugin>
