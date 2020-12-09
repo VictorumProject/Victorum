@@ -24,14 +24,8 @@ public class GrassForMoney implements Listener {
 
 		int price;
 		switch (b.getType()) {
-		case GRASS:
-			price = 50;
-			break;
-		case DIRT:
-			price = 30;
-			break;
 		case DIAMOND_ORE:
-			price = 500;
+			price = 5000;
 			break;
 		default:
 			return;

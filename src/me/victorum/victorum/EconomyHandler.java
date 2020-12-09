@@ -15,7 +15,7 @@ public class EconomyHandler {
 
 	public List<PlayerData> getTopBalances(int count) {
 		List<PlayerData> players = new ArrayList<>(pl.getPlayerDataHandler().getAllData());
-		count = Math.max(count, players.size());
+		count = Math.min(players.size(), Math.max(count, players.size()));
 
 		// TODO: This can be optimized, we only need count number of entries
 		players.sort(new Comparator<PlayerData>() {

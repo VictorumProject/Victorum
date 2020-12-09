@@ -102,6 +102,15 @@ public class Faction {
 		}
 	}
 
+	public void deposit(long returnCost) {
+		double amountPerBalance = (double) returnCost / this.getBalance();
+		for (UUID id : getPlayers()) {
+			PlayerData pd = pl.getPlayerDataHandler().getPlayerData(id);
+			long value = (long) (pd.getBalanceForFaction() * amountPerBalance);
+			pd.addBalance(value);
+		}
+	}
+
 	public boolean isDefaultFaction() {
 		return this.factionID == Opt.DEFAULT_FACTION_ID;
 	}

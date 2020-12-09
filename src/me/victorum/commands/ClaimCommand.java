@@ -56,7 +56,7 @@ public class ClaimCommand implements CommandExecutor {
 			} else if (args[0].equalsIgnoreCase("join")) {
 				sender.sendMessage("§e/" + lbl + " join <facti>");
 			} else if (args[0].equalsIgnoreCase("unclaim")) {
-				unclaiming(p, playerFac, chunkX, chunkZ);
+				unclaim(p, playerFac, chunkX, chunkZ);
 			} else if (args[0].equalsIgnoreCase("map")) {
 				openMap(p, playerFac, chunkX, chunkZ);
 			} else if (args[0].equalsIgnoreCase("list")) {
@@ -403,30 +403,62 @@ public class ClaimCommand implements CommandExecutor {
 					+ ".");
 			return;
 		}
-		int claimFaction = pl.getClaimHandler().getClaim(chunkX, chunkZ).getFactionID();
-		if (claimFaction != Opt.DEFAULT_FACTION_ID) {
-			// TODO: Overclaiming
-			// TODO: Message if own faction already owns it
-			claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " on jo varattu!");
+		Faction claimFaction = pl.getClaimHandler().getClaim(chunkX, chunkZ).getFaction();
+		long weeklyRent = Claim.getWeeklyRent(chunkX, chunkZ);
+		if (claimFaction.isDefaultFaction()) {
+			if (playerFac.getBalance() < weeklyRent) {
+				claimer.sendMessage("§eFactillasi ei ole varaa vuokrata enempää alueita. Alueen hinta on " + weeklyRent
+						+ "/viikko.");
+				return;
+			}
+			playerFac.withdraw(weeklyRent);
+			pl.getClaimHandler().create(chunkX, chunkZ, playerFac.getID());
+			claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " claimattu! Vuokra: $" + weeklyRent + "/viikko.");
 			return;
 		}
 
-		long rent = Claim.getWeeklyRent(chunkX, chunkZ);
-		if (playerFac.getBalance() < rent) {
-			claimer.sendMessage("§eFactillasi ei ole varaa vuokrata enempää alueita. Alueen hinta on " + rent
-					+ "/viikko.");
+		if (claimFaction == pd.getFaction()) {
+			claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " on jo factionillesi suojattu.");
 			return;
 		}
-		playerFac.withdraw(rent);
+
+		// Overclaiming
+
+		// Defending faction gets 10x the weekly rent instantly from claimer when
+		// overclaimed
+		long overclaimPrice = 10 * Claim.getWeeklyRent(chunkX, chunkZ);
+
+		if (playerFac.getBalance() < weeklyRent + overclaimPrice) {
+			claimer.sendMessage(
+					"§eFactillasi ei ole varaa valloittaa enempää alueita. Tämän alueen voi valloittaa hinnalla "
+							+ (weeklyRent + overclaimPrice) + "/viikko.");
+			return;
+		}
+
+		// Test for center claims
+		int enemyClaimsAround = 0;
+		for (int i = -1; i < 2; i++)
+			for (int j = -1; j < 2; j++)
+				if (pl.getClaimHandler().getClaim(chunkX + i, chunkZ + j).getFaction() == claimFaction)
+					enemyClaimsAround++;
+		if (enemyClaimsAround > 6) {
+			claimer.sendMessage(
+					"§eAloita valloittaminen kauempaa. Tämän claimin ympärillä on yli 5 vihollisen aluetta.");
+			return;
+		}
+
+		playerFac.withdraw(overclaimPrice + weeklyRent);
+		claimFaction.deposit(overclaimPrice);
+		pl.getClaimHandler().unclaim(chunkX, chunkZ);
 		pl.getClaimHandler().create(chunkX, chunkZ, playerFac.getID());
-		claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " claimattu! Vuokra: $" + rent + "/viikko.");
+		claimer.sendMessage("§eAlue " + chunkX + ":" + chunkZ + " yliclaimattu! Vuokra: $" + weeklyRent
+				+ "/viikko. Valloitusmaksu viholliselle: $" + overclaimPrice + ".");
 	}
 
 	/**
-	 * First count the prize and rent all chunks if has money
+	 * First count the prize -and rent all chunks if has money
 	 *
-	 * TODO: Still not done
-	 * TODO: Do similar method for unclaiming
+	 * TODO: Still not done TODO: Do similar method for unclaiming
 	 */
 	private void claimRadius(Player p, Faction fac, Chunk ch, String arg0, String arg1) {
 		if (fac.getID() == Opt.DEFAULT_FACTION_ID) {
@@ -469,16 +501,26 @@ public class ClaimCommand implements CommandExecutor {
 
 	}
 
-
 	// TODO: enemy can unclaim own area from center -- has to be from the edges
-	private void unclaiming(Player p, Faction playerFac, int chunkX, int chunkZ) {
+	private void unclaim(Player p, Faction playerFac, int chunkX, int chunkZ) {
 		PlayerData pd = pl.getPlayerDataHandler().getPlayerData(p.getUniqueId());
 		if (pd.getRole() != FactionRole.LEADER) {
 			p.sendMessage("§eEt ole factisi johtaja. Raja johtajuuteen on $" + playerFac.getLeaderThreshold() + ".");
 			return;
 		}
-		pl.getClaimHandler().unclaim(pl.getClaimHandler().getClaim(chunkX, chunkZ));
 
+		Claim claim = pl.getClaimHandler().getClaim(chunkX, chunkZ);
+
+		if (claim.getFaction().isDefaultFaction()) {
+			p.sendMessage("§eTätä aluetta ei ole claimattu.");
+			return;
+		}
+		double timeLeft = claim.getExpirationDate() - System.currentTimeMillis();
+		long returnCost = (long) (Claim.getWeeklyRent(chunkX, chunkZ) * (timeLeft / (7 * 24 * 60 * 60 * 1000)));
+
+		pl.getClaimHandler().unclaim(claim);
+		playerFac.deposit(returnCost);
+		p.sendMessage("§eAlueen suojaus poistettu. Factionille palautettu $" + returnCost + ".");
 	}
 
 	private void openMap(Player p, Faction playerFac, int centerChunkX, int centerChunkZ) {
@@ -527,7 +569,8 @@ public class ClaimCommand implements CommandExecutor {
 				.getZ()).getFaction();
 		String currentChunkName = pl.getRelationHandler().getRelation(playerFac.getID(), otherFac.getID()).getColor()
 				+ otherFac.getShortName();
-		p.sendMessage("§eAlueesi: " + currentChunkName);
+		p.sendMessage("§eAlueesi: " + currentChunkName + "§e. Vuokra: $" + Claim.getWeeklyRent(centerChunkX,
+				centerChunkZ) + "/viikko.");
 
 		// The variable stores the mapping of colors to faction names
 		String reference = "";

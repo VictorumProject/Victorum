@@ -7,9 +7,10 @@
 	<version>1.0.0-SNAPSHOT</version>
 	<name>Victorum</name>
 	<description>An experimental Factions gamemode.</description>
+	
 	<build>
 		<sourceDirectory>src</sourceDirectory>
-		<defaultGoal>package</defaultGoal>
+		<defaultGoal>package install</defaultGoal>
 
 		<plugins>
 			<plugin>

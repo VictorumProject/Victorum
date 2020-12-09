@@ -57,6 +57,10 @@ public class ClaimHandler {
 		return c;
 	}
 
+	public void unclaim(int chunkX, int chunkZ) {
+		unclaim(getClaim(chunkX, chunkZ));
+	}
+
 	public void unclaim(Claim claim) {
 		claims.remove(claim.getID());
 		Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
