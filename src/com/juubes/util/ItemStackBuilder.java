@@ -1,4 +1,4 @@
-package com.juubes.api;
+package com.juubes.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
